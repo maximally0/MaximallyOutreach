@@ -1,13 +1,13 @@
 [
   {
-    "school_name": "Rishul Chanana",
+    "school_name": "Test Email",
     "email": "rishulchanana36@gmail.com",
-    "template_used": "Individual Email",
+    "template_used": "Custom Test",
     "template_id": 0,
     "status": "Sent",
-    "timestamp": "2025-07-20T18:21:06.893874",
-    "email_id": "8022019d-6a1e-4715-b205-1f3248f0a42e",
-    "subject": "Sponsorship Opportunity \u2013 Maximally Startup Makeathon 2025"
+    "timestamp": "2025-07-20T18:38:07.284540",
+    "email_id": "244bc122-fd2a-43d3-a597-a36957dcd63e",
+    "subject": "Test Email from Individual Email Form"
   },
   {
     "school_name": "Test Email",
@@ -15,8 +15,8 @@
     "template_used": "Custom Test",
     "template_id": 0,
     "status": "Sent",
-    "timestamp": "2025-07-20T18:25:38.525108",
-    "email_id": "907be190-5ec2-479e-b8f7-990d21d83d03",
-    "subject": "Test Email from Individual Email Form"
+    "timestamp": "2025-07-20T18:40:35.202118",
+    "email_id": "1bf4a06a-10d4-44c5-b615-5c76e0e4ea32",
+    "subject": "AI Competition Invite for Sample High School"
   }
 ]
