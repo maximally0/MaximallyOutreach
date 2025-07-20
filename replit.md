@@ -40,18 +40,25 @@ Preferred communication style: Simple, everyday language.
 ### Data Management
 - **School Data**: CSV upload and JSON storage system for school information (name, email, contact person, city)
 - **Template System**: Pre-defined email templates with variable placeholders ({{school_name}}, {{contact_person}}, {{city}})
+- **Template Management**: Create, edit, and customize email templates through web interface
 - **Logging**: Activity tracking for sent emails and system events
 
 ### Email System
 - **Provider**: Resend API integration for email delivery
 - **Features**: Template-based personalized emails with variable substitution
+- **Custom Emails**: Send emails without templates using custom subject and content
+- **HTML Support**: Rich email formatting with image support via HTML content
 - **A/B Testing**: Support for testing multiple templates simultaneously
+- **Test Email**: Send test emails to rishulchanana36@gmail.com for validation
 
 ### User Interface
 - **Dashboard**: Single-page interface with multiple functional sections
 - **File Upload**: CSV import functionality for bulk school data
-- **Template Management**: Interface for selecting and managing email templates
+- **Template Management**: Interface for creating, editing, and selecting email templates
+- **Custom Email Composer**: Rich text and HTML email composition with image support
+- **Test Email System**: Send test emails to validate content and formatting
 - **Bulk Operations**: Select all/individual school targeting options
+- **Preview System**: Preview emails with personalized content before sending
 
 ## Data Flow
 

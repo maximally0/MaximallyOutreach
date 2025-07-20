@@ -111,8 +111,13 @@
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0"><i class="bi bi-envelope"></i> Email Campaign</h5>
+                        <div>
+                            <a href="/create_template" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-plus-circle"></i> Create Template
+                            </a>
+                        </div>
                     </div>
                     <div class="card-body">
                         <form id="campaignForm">
@@ -145,20 +150,40 @@
 
                             <div class="row mb-3">
                                 <div class="col-12">
-                                    <label for="customContent" class="form-label">Custom Email Content (Optional)</label>
-                                    <textarea class="form-control" id="customContent" rows="8" placeholder="Leave empty to use template content"></textarea>
+                                    <label for="customContent" class="form-label">Custom Text Content (Optional)</label>
+                                    <textarea class="form-control" id="customContent" rows="6" placeholder="Leave empty to use template content"></textarea>
                                 </div>
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-6 d-grid">
+                                <div class="col-12">
+                                    <label for="customHtmlContent" class="form-label">Custom HTML Content (Optional - For Images & Rich Formatting)</label>
+                                    <textarea class="form-control" id="customHtmlContent" rows="8" placeholder='Leave empty for plain text. Use HTML for images: <img src="https://example.com/image.jpg" alt="Description">'></textarea>
+                                    <div class="form-text">
+                                        Supports HTML formatting and images. Use placeholders: {{school_name}}, {{contact_person}}, {{city}}, {{email}}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-3 d-grid">
                                     <button type="button" class="btn btn-outline-info" onclick="previewEmail()">
                                         <i class="bi bi-eye"></i> Preview Email
                                     </button>
                                 </div>
-                                <div class="col-md-6 d-grid">
+                                <div class="col-md-3 d-grid">
+                                    <button type="button" class="btn btn-outline-warning" onclick="sendTestEmail()">
+                                        <i class="bi bi-envelope-check"></i> Send Test Email
+                                    </button>
+                                </div>
+                                <div class="col-md-3 d-grid">
+                                    <button type="button" class="btn btn-outline-primary" onclick="sendCustomEmail()">
+                                        <i class="bi bi-send-plus"></i> Send Custom Email
+                                    </button>
+                                </div>
+                                <div class="col-md-3 d-grid">
                                     <button type="button" class="btn btn-success" onclick="sendEmails()" id="sendButton">
-                                        <i class="bi bi-send"></i> Send to Selected Schools
+                                        <i class="bi bi-send"></i> Send with Template
                                     </button>
                                 </div>
                             </div>
@@ -197,6 +222,45 @@
                 </div>
             </div>
         </div>
+
+        <!-- Template Management -->
+        {% if templates %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-card-text"></i> Template Management</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Template Name</th>
+                                        <th>Subject</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for template in templates %}
+                                    <tr>
+                                        <td>{{ template.name }}</td>
+                                        <td>{{ template.subject }}</td>
+                                        <td>
+                                            <a href="/edit_template/{{ template.id }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-pencil"></i> Edit
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Email Logs -->
         {% if logs %}

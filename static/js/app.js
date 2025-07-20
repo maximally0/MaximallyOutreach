@@ -84,9 +84,10 @@ async function previewEmail() {
     const abTesting = document.getElementById('abTesting').checked;
     const customContent = document.getElementById('customContent').value;
     const customSubject = document.getElementById('customSubject').value;
+    const customHtmlContent = document.getElementById('customHtmlContent').value;
     
-    if (!abTesting && !templateSelect.value) {
-        alert('Please select a template first');
+    if (!abTesting && !templateSelect.value && !customContent && !customHtmlContent) {
+        alert('Please select a template or enter custom content');
         return;
     }
     
@@ -109,7 +110,8 @@ async function previewEmail() {
                 template_id: parseInt(templateSelect.value),
                 school_index: schoolIndex,
                 custom_content: customContent || null,
-                custom_subject: customSubject || null
+                custom_subject: customSubject || null,
+                custom_html_content: customHtmlContent || null
             })
         });
         
@@ -129,6 +131,113 @@ async function previewEmail() {
     } catch (error) {
         console.error('Error previewing email:', error);
         alert('Error previewing email: ' + error.message);
+    }
+}
+
+// Send test email
+async function sendTestEmail() {
+    const customSubject = document.getElementById('customSubject').value || 'Test Email from Maximally Dashboard';
+    const customContent = document.getElementById('customContent').value || 'This is a test email from your Maximally outreach dashboard.';
+    const customHtmlContent = document.getElementById('customHtmlContent').value;
+    
+    if (!confirm('Send test email to rishulchanana36@gmail.com?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/send_test_email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                subject: customSubject,
+                content: customContent,
+                html_content: customHtmlContent
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('✅ Test email sent successfully to rishulchanana36@gmail.com!');
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error sending test email:', error);
+        alert('Error sending test email: ' + error.message);
+    }
+}
+
+// Send custom email without templates
+async function sendCustomEmail() {
+    const customSubject = document.getElementById('customSubject').value;
+    const customContent = document.getElementById('customContent').value;
+    const customHtmlContent = document.getElementById('customHtmlContent').value;
+    
+    if (!customSubject || (!customContent && !customHtmlContent)) {
+        alert('Please enter a subject and content for your custom email');
+        return;
+    }
+    
+    const selectedSchools = getSelectedSchools();
+    if (selectedSchools.length === 0) {
+        alert('Please select at least one school');
+        return;
+    }
+    
+    // Confirm sending
+    const confirmMessage = `Send custom email to ${selectedSchools.length} school(s)?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/send_custom_email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                subject: customSubject,
+                content: customContent,
+                html_content: customHtmlContent,
+                selected_schools: selectedSchools
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Show results
+            let successCount = 0;
+            let errorCount = 0;
+            
+            data.results.forEach(result => {
+                if (result.status === 'success') {
+                    successCount++;
+                } else {
+                    errorCount++;
+                }
+            });
+            
+            let message = `Custom email sending completed!\n`;
+            message += `✅ Successful: ${successCount}\n`;
+            if (errorCount > 0) {
+                message += `❌ Errors: ${errorCount}`;
+            }
+            
+            alert(message);
+            
+            // Reload page to show updated logs
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error sending custom emails:', error);
+        alert('Error sending custom emails: ' + error.message);
     }
 }
 
@@ -210,7 +319,7 @@ async function sendEmails() {
     } finally {
         // Re-enable send button
         sendButton.disabled = false;
-        sendButton.innerHTML = '<i class="bi bi-send"></i> Send to Selected Schools';
+        sendButton.innerHTML = '<i class="bi bi-send"></i> Send with Template';
     }
 }
 
