@@ -134,13 +134,14 @@ async function previewEmail() {
     }
 }
 
-// Send test email
+// Send test email with current form content
 async function sendTestEmail() {
-    const customSubject = document.getElementById('customSubject').value || 'Test Email from Maximally Dashboard';
-    const customContent = document.getElementById('customContent').value || 'This is a test email from your Maximally outreach dashboard.';
+    const templateSelect = document.getElementById('templateSelect');
+    const customSubject = document.getElementById('customSubject').value;
+    const customContent = document.getElementById('customContent').value;
     const customHtmlContent = document.getElementById('customHtmlContent').value;
     
-    if (!confirm('Send test email to rishulchanana36@gmail.com?')) {
+    if (!confirm('Send test email with current content to rishulchanana36@gmail.com?')) {
         return;
     }
     
@@ -151,6 +152,7 @@ async function sendTestEmail() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                template_id: parseInt(templateSelect.value) || null,
                 subject: customSubject,
                 content: customContent,
                 html_content: customHtmlContent
@@ -168,6 +170,20 @@ async function sendTestEmail() {
         console.error('Error sending test email:', error);
         alert('Error sending test email: ' + error.message);
     }
+}
+
+// Delete template
+function deleteTemplate(templateId, templateName) {
+    if (!confirm(`Are you sure you want to delete template "${templateName}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    // Create a form and submit it for deletion
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = `/delete_template/${templateId}`;
+    document.body.appendChild(form);
+    form.submit();
 }
 
 // Send custom email without templates

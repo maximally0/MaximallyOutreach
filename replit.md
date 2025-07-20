@@ -40,34 +40,40 @@ Preferred communication style: Simple, everyday language.
 ### Data Management
 - **School Data**: CSV upload and JSON storage system for school information (name, email, contact person, city)
 - **Template System**: Pre-defined email templates with variable placeholders ({{school_name}}, {{contact_person}}, {{city}})
-- **Template Management**: Create, edit, and customize email templates through web interface
+- **Template Management**: Full CRUD operations - create, edit, delete, and customize email templates through web interface
 - **Logging**: Activity tracking for sent emails and system events
 
 ### Email System
-- **Provider**: Resend API integration for email delivery
+- **Provider**: Resend API integration for email delivery from hello@maximally.in
 - **Features**: Template-based personalized emails with variable substitution
 - **Custom Emails**: Send emails without templates using custom subject and content
 - **HTML Support**: Rich email formatting with image support via HTML content
 - **A/B Testing**: Support for testing multiple templates simultaneously
-- **Test Email**: Send test emails to rishulchanana36@gmail.com for validation
+- **Test Email**: Send current form content to rishulchanana36@gmail.com with sample school data for validation
+- **Dual Format**: Support for both plain text and HTML emails with automatic fallback
 
 ### User Interface
 - **Dashboard**: Single-page interface with multiple functional sections
-- **File Upload**: CSV import functionality for bulk school data
-- **Template Management**: Interface for creating, editing, and selecting email templates
+- **File Upload**: CSV import functionality for bulk school data  
+- **Template Management**: Interface for creating, editing, deleting, and selecting email templates
 - **Custom Email Composer**: Rich text and HTML email composition with image support
-- **Test Email System**: Send test emails to validate content and formatting
+- **Test Email System**: Send current email content to rishulchanana36@gmail.com for validation
+- **Four Email Options**: Preview, Test, Custom Send, and Template Send with clear explanations
 - **Bulk Operations**: Select all/individual school targeting options
 - **Preview System**: Preview emails with personalized content before sending
+- **Help Integration**: Tooltip explanations and info alerts for all features
 
 ## Data Flow
 
 1. **Data Import**: Users upload CSV files containing school information
-2. **Template Selection**: Users choose from pre-defined email templates or enable A/B testing
-3. **Target Selection**: Users select specific schools or all schools for outreach
-4. **Email Processing**: System personalizes templates with school-specific data
-5. **Email Delivery**: Resend API handles email transmission
-6. **Activity Logging**: System records email sending activities and results
+2. **Template Management**: Users create, edit, or delete email templates as needed
+3. **Email Composition**: Users can use templates, create custom emails, or send tests
+4. **Content Options**: Support for plain text, HTML with images, or both formats
+5. **Target Selection**: Users select specific schools or all schools for outreach
+6. **Validation**: Preview and test email functionality before sending to schools
+7. **Email Processing**: System personalizes content with school-specific data
+8. **Email Delivery**: Resend API handles email transmission with dual format support
+9. **Activity Logging**: System records all email activities including tests and custom emails
 
 ## External Dependencies
 

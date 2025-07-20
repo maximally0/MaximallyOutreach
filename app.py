@@ -494,26 +494,77 @@ def create_template():
         flash(f'Error creating template: {str(e)}', 'error')
         return render_template('create_template.html')
 
+@app.route('/delete_template/<int:template_id>', methods=['POST'])
+def delete_template(template_id):
+    """Delete a template"""
+    try:
+        templates = load_json_file('data/templates.json', [])
+        
+        # Find and remove template
+        templates = [t for t in templates if t['id'] != template_id]
+        
+        save_json_file('data/templates.json', templates)
+        flash('Template deleted successfully', 'success')
+        
+    except Exception as e:
+        logging.error(f"Error deleting template: {str(e)}")
+        flash(f'Error deleting template: {str(e)}', 'error')
+    
+    return redirect(url_for('index'))
+
 @app.route('/send_test_email', methods=['POST'])
 def send_test_email():
-    """Send test email to rishulchanana36@gmail.com"""
+    """Send test email with current form content to rishulchanana36@gmail.com"""
     try:
         data = request.get_json()
-        subject = data.get('subject', 'Test Email from Maximally Dashboard')
-        content = data.get('content', 'This is a test email from your Maximally outreach dashboard.')
+        template_id = data.get('template_id')
+        custom_subject = data.get('subject', '')
+        custom_content = data.get('content', '')
         html_content = data.get('html_content', '')
+        
+        # If no custom content, use template content
+        if not custom_subject and not custom_content and not html_content and template_id:
+            templates = load_json_file('data/templates.json', [])
+            template = None
+            for t in templates:
+                if t['id'] == template_id:
+                    template = t
+                    break
+            
+            if template:
+                custom_subject = template['subject']
+                custom_content = template['content']
+        
+        # Use defaults if still empty
+        subject = custom_subject if custom_subject else 'Test Email from Maximally Dashboard'
+        content = custom_content if custom_content else 'This is a test email from your Maximally outreach dashboard.'
+        
+        # Create sample school data for placeholder replacement
+        sample_school = {
+            'School Name': 'Sample High School',
+            'Contact Person': 'Test Contact',
+            'City': 'Test City',
+            'Email': 'rishulchanana36@gmail.com'
+        }
+        
+        # Replace placeholders with sample data
+        final_subject = replace_placeholders(subject, sample_school)
+        final_content = replace_placeholders(content, sample_school)
+        final_html = replace_placeholders(html_content, sample_school) if html_content else ''
 
         # Send email via Resend
         params = {
             "from": "hello@maximally.in",
             "to": ["rishulchanana36@gmail.com"],
-            "subject": subject,
+            "subject": final_subject,
         }
 
-        if html_content:
-            params["html"] = html_content
+        if final_html:
+            params["html"] = final_html
+            if final_content:
+                params["text"] = final_content
         else:
-            params["text"] = content
+            params["text"] = final_content
 
         email = resend.Emails.send(params)
 
@@ -527,7 +578,7 @@ def send_test_email():
             'status': 'Sent',
             'timestamp': datetime.now().isoformat(),
             'email_id': email.get('id', ''),
-            'subject': subject
+            'subject': final_subject
         }
         logs.append(log_entry)
         save_json_file('data/logs.json', logs)

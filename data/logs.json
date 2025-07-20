@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "school_name": "Rishul Chanana",
+    "email": "rishulchanana36@gmail.com",
+    "template_used": "Individual Email",
+    "template_id": 0,
+    "status": "Sent",
+    "timestamp": "2025-07-20T18:21:06.893874",
+    "email_id": "8022019d-6a1e-4715-b205-1f3248f0a42e",
+    "subject": "Sponsorship Opportunity \u2013 Maximally Startup Makeathon 2025"
+  },
+  {
+    "school_name": "Test Email",
+    "email": "rishulchanana36@gmail.com",
+    "template_used": "Custom Test",
+    "template_id": 0,
+    "status": "Sent",
+    "timestamp": "2025-07-20T18:25:38.525108",
+    "email_id": "907be190-5ec2-479e-b8f7-990d21d83d03",
+    "subject": "Test Email from Individual Email Form"
+  }
+]

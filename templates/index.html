@@ -175,24 +175,38 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-3 d-grid">
-                                    <button type="button" class="btn btn-outline-info" onclick="previewEmail()">
+                                    <button type="button" class="btn btn-outline-info" onclick="previewEmail()" title="Preview how the email will look with real school data">
                                         <i class="bi bi-eye"></i> Preview Email
                                     </button>
                                 </div>
                                 <div class="col-md-3 d-grid">
-                                    <button type="button" class="btn btn-outline-warning" onclick="sendTestEmail()">
+                                    <button type="button" class="btn btn-outline-warning" onclick="sendTestEmail()" title="Send current email content to rishulchanana36@gmail.com for testing">
                                         <i class="bi bi-envelope-check"></i> Send Test Email
                                     </button>
                                 </div>
                                 <div class="col-md-3 d-grid">
-                                    <button type="button" class="btn btn-outline-primary" onclick="sendCustomEmail()">
+                                    <button type="button" class="btn btn-outline-primary" onclick="sendCustomEmail()" title="Send custom email without using any template">
                                         <i class="bi bi-send-plus"></i> Send Custom Email
                                     </button>
                                 </div>
                                 <div class="col-md-3 d-grid">
-                                    <button type="button" class="btn btn-success" onclick="sendEmails()" id="sendButton">
+                                    <button type="button" class="btn btn-success" onclick="sendEmails()" id="sendButton" title="Send emails using selected template with A/B testing option">
                                         <i class="bi bi-send"></i> Send with Template
                                     </button>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <strong>Email Options Explained:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            <li><strong>Preview:</strong> See how your email will look with actual school data</li>
+                                            <li><strong>Test Email:</strong> Send the current content to rishulchanana36@gmail.com for validation</li>
+                                            <li><strong>Custom Email:</strong> Send completely custom content without using templates</li>
+                                            <li><strong>Template Email:</strong> Use selected template with optional A/B testing</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -255,9 +269,14 @@
                                         <td>{{ template.name }}</td>
                                         <td>{{ template.subject }}</td>
                                         <td>
-                                            <a href="/edit_template/{{ template.id }}" class="btn btn-sm btn-outline-primary">
-                                                <i class="bi bi-pencil"></i> Edit
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="/edit_template/{{ template.id }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="bi bi-pencil"></i> Edit
+                                                </a>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteTemplate({{ template.id }}, '{{ template.name }}')">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
