@@ -58,5 +58,11 @@
     "name": "Community Impact Template",
     "subject": "Empowering {{school_name}} to Shape the Future",
     "content": "Dear {{contact_person}},\n\n{{school_name}} plays a vital role in shaping the future of students in {{city}}. We want to support that mission.\n\nOur educational platform has helped schools create more engaging, effective learning environments. Students at partner schools report higher satisfaction and better outcomes.\n\nI'd love to discuss how {{school_name}} could join our community of forward-thinking educational institutions.\n\nWhen would be a good time to connect?\n\nWith appreciation,\n[Your Name]\nMaximally Community Team"
+  },
+  {
+    "id": 11,
+    "name": "Chandigarh Intro \u2013 AI Competition Invite",
+    "subject": "AI Competition Invite for {{school_name}}",
+    "content": "Hi {{contact_person}},\r\n\r\nWe organize fun, beginner-friendly competitions that help students build real-world projects.\r\n\r\nWe recently hosted a Startup Competition where students from {{school_name}} took part \u2014 and did really well. Now, we\u2019re back with something new.\r\n\r\nWe\u2019re hosting an online AI competition open to all students in {{city}}. It\u2019s free, team-friendly, and doesn\u2019t need coding skills. Students can use tools like Canva, ChatGPT, or anything they\u2019re comfortable with.\r\n\r\nOur last event saw 1000+ students across India. This time, we\u2019re expecting even more.\r\n\r\nCan I share a poster and signup link with you? Would love to see {{school_name}} represented again.\r\n\r\nBest,  \r\nRishul Chanana  \r\nFounder, Maximally  \r\n\ud83d\udcde +91-9041260790  \r\n\ud83c\udf10 maximally.in"
   }
 ]
