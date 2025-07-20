@@ -3,7 +3,7 @@
     "id": 1,
     "name": "Introduction Template",
     "subject": "Partnership Opportunity with {{school_name}}",
-    "content": "Dear {{contact_person}},\n\nI hope this email finds you well. My name is [Your Name] and I'm reaching out from Maximally to explore a potential partnership with {{school_name}} in {{city}}.\n\nWe specialize in educational technology solutions that can help enhance student learning outcomes. I'd love to discuss how we can support {{school_name}}'s educational goals.\n\nWould you be available for a brief call next week?\n\nBest regards,\n[Your Name]\nMaximally Team"
+    "content": "Dear {{contact_person}},\r\n\r\nI hope this email finds you well. My name is [Your Name] and I'm reaching out from Maximally to explore a potential partnership with {{school_name}} in {{city}}.\r\n\r\nWe specialize in educational technology solutions that can help enhance student learning outcomes. I'd love to discuss how we can support {{school_name}}'s educational goals.\r\n\r\nWould you be available for a brief call next week?\r\n\r\nBest regards,\r\n[Your Name]\r\nMaximally Team"
   },
   {
     "id": 2,
