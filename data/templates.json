@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Introduction Template",
+    "subject": "Partnership Opportunity with {{school_name}}",
+    "content": "Dear {{contact_person}},\n\nI hope this email finds you well. My name is [Your Name] and I'm reaching out from Maximally to explore a potential partnership with {{school_name}} in {{city}}.\n\nWe specialize in educational technology solutions that can help enhance student learning outcomes. I'd love to discuss how we can support {{school_name}}'s educational goals.\n\nWould you be available for a brief call next week?\n\nBest regards,\n[Your Name]\nMaximally Team"
+  },
+  {
+    "id": 2,
+    "name": "Product Demo Template",
+    "subject": "Free Demo for {{school_name}} - Educational Technology",
+    "content": "Hello {{contact_person}},\n\nI wanted to reach out to {{school_name}} in {{city}} to offer a complimentary demonstration of our educational platform.\n\nOur solution has helped schools increase student engagement by 40% on average. I believe {{school_name}} could greatly benefit from our technology.\n\nCould we schedule a 15-minute demo at your convenience?\n\nThank you for your time,\n[Your Name]\nMaximally"
+  },
+  {
+    "id": 3,
+    "name": "Follow-up Template",
+    "subject": "Following up on our conversation - {{school_name}}",
+    "content": "Hi {{contact_person}},\n\nI wanted to follow up on my previous email regarding the partnership opportunity with {{school_name}}.\n\nI understand you're busy managing {{school_name}} in {{city}}, but I believe our platform could provide significant value to your students and teachers.\n\nWould you prefer a quick phone call or email exchange to discuss this further?\n\nLooking forward to hearing from you,\n[Your Name]\nMaximally"
+  },
+  {
+    "id": 4,
+    "name": "Case Study Template",
+    "subject": "How Schools Like {{school_name}} Improved Student Outcomes",
+    "content": "Dear {{contact_person}},\n\nI hope you're having a great week at {{school_name}}!\n\nI wanted to share a success story from a school similar to yours in {{city}}. They saw a 35% improvement in student performance after implementing our platform.\n\nI'd love to discuss how {{school_name}} could achieve similar results. Are you available for a brief conversation this week?\n\nBest,\n[Your Name]\nMaximally Team"
+  },
+  {
+    "id": 5,
+    "name": "Value Proposition Template",
+    "subject": "Transform Education at {{school_name}} with Maximally",
+    "content": "Hello {{contact_person}},\n\nAs an educational leader at {{school_name}} in {{city}}, you're always looking for ways to improve student outcomes.\n\nOur platform offers:\n- Interactive learning modules\n- Real-time progress tracking\n- Personalized learning paths\n- Teacher analytics dashboard\n\nWould you like to see how {{school_name}} could benefit? I can arrange a personalized demo.\n\nWarm regards,\n[Your Name]\nMaximally"
+  },
+  {
+    "id": 6,
+    "name": "Urgent Opportunity Template",
+    "subject": "Limited Time: Special Offer for {{school_name}}",
+    "content": "Hi {{contact_person}},\n\nI have exciting news for {{school_name}}! We're offering a limited-time pilot program for select schools in {{city}}.\n\nThis program includes:\n- Free 3-month trial\n- Dedicated support team\n- Custom training for your staff\n- Performance analytics\n\nOnly 5 spots remaining. Is {{school_name}} interested in being part of this exclusive program?\n\nBest regards,\n[Your Name]\nMaximally"
+  },
+  {
+    "id": 7,
+    "name": "Research-Based Template",
+    "subject": "Evidence-Based Solutions for {{school_name}}",
+    "content": "Dear {{contact_person}},\n\nRecent educational research shows that technology-enhanced learning can improve student engagement by up to 60%.\n\nAt {{school_name}} in {{city}}, I believe you're committed to giving students the best possible education. Our research-backed platform aligns with this mission.\n\nWould you like to review the research findings and see how they apply to {{school_name}}?\n\nSincerely,\n[Your Name]\nMaximally Research Team"
+  },
+  {
+    "id": 8,
+    "name": "Personal Connection Template",
+    "subject": "Supporting {{school_name}}'s Educational Mission",
+    "content": "Hello {{contact_person}},\n\nAs someone passionate about education, I was impressed by {{school_name}}'s commitment to student success in {{city}}.\n\nI believe our platform could amplify the great work you're already doing at {{school_name}}. We've helped similar schools enhance their educational programs significantly.\n\nI'd love to learn more about {{school_name}}'s specific goals and see how we can support them.\n\nCould we schedule a brief call?\n\nBest wishes,\n[Your Name]\nMaximally"
+  },
+  {
+    "id": 9,
+    "name": "Problem-Solution Template",
+    "subject": "Solving Common Challenges at {{school_name}}",
+    "content": "Hi {{contact_person}},\n\nMany schools in {{city}} face similar challenges: keeping students engaged, tracking progress effectively, and supporting diverse learning needs.\n\nI'd like to show you how {{school_name}} can address these challenges with our comprehensive platform. We've developed solutions specifically for schools like yours.\n\nAre you available for a 20-minute discussion about {{school_name}}'s current challenges and our solutions?\n\nThank you,\n[Your Name]\nMaximally Solutions Team"
+  },
+  {
+    "id": 10,
+    "name": "Community Impact Template",
+    "subject": "Empowering {{school_name}} to Shape the Future",
+    "content": "Dear {{contact_person}},\n\n{{school_name}} plays a vital role in shaping the future of students in {{city}}. We want to support that mission.\n\nOur educational platform has helped schools create more engaging, effective learning environments. Students at partner schools report higher satisfaction and better outcomes.\n\nI'd love to discuss how {{school_name}} could join our community of forward-thinking educational institutions.\n\nWhen would be a good time to connect?\n\nWith appreciation,\n[Your Name]\nMaximally Community Team"
+  }
+]
