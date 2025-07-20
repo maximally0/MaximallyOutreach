@@ -100,7 +100,7 @@ def initialize_templates():
             "content": "Dear {{contact_person}},\n\n{{school_name}} plays a vital role in shaping the future of students in {{city}}. We want to support that mission.\n\nOur educational platform has helped schools create more engaging, effective learning environments. Students at partner schools report higher satisfaction and better outcomes.\n\nI'd love to discuss how {{school_name}} could join our community of forward-thinking educational institutions.\n\nWhen would be a good time to connect?\n\nWith appreciation,\n[Your Name]\nMaximally Community Team"
         }
     ]
-    
+
     if not os.path.exists(templates_file):
         save_json_file(templates_file, default_templates)
     return load_json_file(templates_file, default_templates)
@@ -113,12 +113,16 @@ def replace_placeholders(text, school_data):
         '{{city}}': school_data.get('City', ''),
         '{{email}}': school_data.get('Email', '')
     }
-    
+
     result = text
     for placeholder, value in placeholders.items():
         result = result.replace(placeholder, str(value))
-    
+
     return result
+
+def load_settings():
+    """Load email settings from file"""
+    return load_json_file('data/settings.json', {})
 
 @app.route('/')
 def index():
@@ -126,7 +130,7 @@ def index():
     schools = load_json_file('data/schools.json', [])
     templates = load_json_file('data/templates.json', [])
     logs = load_json_file('data/logs.json', [])
-    
+
     return render_template('index.html', 
                          schools=schools, 
                          templates=templates, 
@@ -139,39 +143,39 @@ def upload_csv():
         if 'file' not in request.files:
             flash('No file selected', 'error')
             return redirect(url_for('index'))
-        
+
         file = request.files['file']
         if file.filename == '':
             flash('No file selected', 'error')
             return redirect(url_for('index'))
-        
+
         if not file.filename or not file.filename.lower().endswith('.csv'):
             flash('Please upload a CSV file', 'error')
             return redirect(url_for('index'))
-        
+
         # Read CSV file
         stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
         csv_input = csv.DictReader(stream)
-        
+
         schools = []
         for row in csv_input:
             # Clean and validate row data
             school = {key.strip(): value.strip() for key, value in row.items() if value.strip()}
             if school.get('School Name') and school.get('Email'):
                 schools.append(school)
-        
+
         if not schools:
             flash('No valid school records found in CSV. Make sure you have School Name and Email columns.', 'error')
             return redirect(url_for('index'))
-        
+
         # Save schools data
         save_json_file('data/schools.json', schools)
         flash(f'Successfully uploaded {len(schools)} schools', 'success')
-        
+
     except Exception as e:
         logging.error(f"Error uploading CSV: {str(e)}")
         flash(f'Error uploading file: {str(e)}', 'error')
-    
+
     return redirect(url_for('index'))
 
 @app.route('/preview', methods=['POST'])
@@ -184,45 +188,45 @@ def preview_email():
         custom_content = data.get('custom_content')
         custom_subject = data.get('custom_subject')
         custom_html_content = data.get('custom_html_content')
-        
+
         schools = load_json_file('data/schools.json', [])
         templates = load_json_file('data/templates.json', [])
-        
+
         if not schools:
             return jsonify({'error': 'No schools uploaded'}), 400
-        
+
         if school_index >= len(schools):
             return jsonify({'error': 'Invalid school index'}), 400
-        
+
         school = schools[school_index]
-        
+
         # Find template
         template = None
         for t in templates:
             if t['id'] == template_id:
                 template = t
                 break
-        
+
         if not template:
             return jsonify({'error': 'Template not found'}), 400
-        
+
         # Use custom content if provided, otherwise use template
         subject = custom_subject if custom_subject else template['subject']
         content = custom_content if custom_content else template['content']
         html_content = custom_html_content if custom_html_content else ''
-        
+
         # Replace placeholders
         preview_subject = replace_placeholders(subject, school)
         preview_content = replace_placeholders(content, school)
         preview_html = replace_placeholders(html_content, school) if html_content else ''
-        
+
         return jsonify({
             'subject': preview_subject,
             'content': preview_content,
             'html_content': preview_html,
             'school': school
         })
-        
+
     except Exception as e:
         logging.error(f"Error previewing email: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -238,22 +242,22 @@ def send_emails():
         custom_content = data.get('custom_content')
         custom_subject = data.get('custom_subject')
         custom_html_content = data.get('custom_html_content')
-        
+
         schools = load_json_file('data/schools.json', [])
         templates = load_json_file('data/templates.json', [])
         logs = load_json_file('data/logs.json', [])
-        
+
         if not selected_schools:
             return jsonify({'error': 'No schools selected'}), 400
-        
+
         results = []
-        
+
         for school_index in selected_schools:
             if school_index >= len(schools):
                 continue
-                
+
             school = schools[school_index]
-            
+
             # Determine which template to use
             if ab_testing:
                 # Random template selection for A/B testing
@@ -265,37 +269,42 @@ def send_emails():
                     if t['id'] == template_id:
                         current_template = t
                         break
-                
+
                 if not current_template:
                     return jsonify({'error': 'Template not found'}), 400
-            
+
             # Use custom content if provided
             subject = custom_subject if custom_subject else current_template['subject']
             content = custom_content if custom_content else current_template['content']
             html_content = custom_html_content if custom_html_content else ''
-            
+
             # Replace placeholders
             email_subject = replace_placeholders(subject, school)
             email_content = replace_placeholders(content, school)
             email_html = replace_placeholders(html_content, school) if html_content else ''
-            
+
             # Send email via Resend
             try:
+                settings = load_settings()
+                sender_email = settings.get('sender_email', 'hello@maximally.in')
+                sender_name = settings.get('sender_name', 'Maximally Team')
+                from_address = f"{sender_name} <{sender_email}>" if sender_name else sender_email
+
                 params = {
-                    "from": "hello@maximally.in",
+                    "from": from_address,
                     "to": [school['Email']],
                     "subject": email_subject,
                 }
-                
+
                 if email_html:
                     params["html"] = email_html
                     if email_content:
                         params["text"] = email_content
                 else:
                     params["text"] = email_content
-                
+
                 email = resend.Emails.send(params)
-                
+
                 log_entry = {
                     'school_name': school.get('School Name', ''),
                     'email': school['Email'],
@@ -306,9 +315,9 @@ def send_emails():
                     'email_id': email.get('id', ''),
                     'subject': email_subject
                 }
-                
+
                 results.append({'status': 'success', 'school': school['School Name']})
-                
+
             except Exception as email_error:
                 logging.error(f"Error sending email to {school['Email']}: {str(email_error)}")
                 log_entry = {
@@ -321,19 +330,19 @@ def send_emails():
                     'email_id': '',
                     'subject': email_subject
                 }
-                
+
                 results.append({'status': 'error', 'school': school['School Name'], 'error': str(email_error)})
-            
+
             logs.append(log_entry)
-        
+
         # Save updated logs
         save_json_file('data/logs.json', logs)
-        
+
         return jsonify({
             'message': f'Email sending completed',
             'results': results
         })
-        
+
     except Exception as e:
         logging.error(f"Error sending emails: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -343,16 +352,16 @@ def export_logs():
     """Export email logs as CSV"""
     try:
         logs = load_json_file('data/logs.json', [])
-        
+
         if not logs:
             flash('No email logs to export', 'error')
             return redirect(url_for('index'))
-        
+
         # Create CSV content
         output = io.StringIO()
         fieldnames = ['school_name', 'email', 'template_used', 'status', 'timestamp', 'subject']
         writer = csv.DictWriter(output, fieldnames=fieldnames)
-        
+
         writer.writeheader()
         for log in logs:
             writer.writerow({
@@ -363,20 +372,20 @@ def export_logs():
                 'timestamp': log.get('timestamp', ''),
                 'subject': log.get('subject', '')
             })
-        
+
         # Create file-like object
         output.seek(0)
         file_data = io.BytesIO()
         file_data.write(output.getvalue().encode('utf-8'))
         file_data.seek(0)
-        
+
         return send_file(
             file_data,
             mimetype='text/csv',
             as_attachment=True,
             download_name=f'email_logs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
         )
-        
+
     except Exception as e:
         logging.error(f"Error exporting logs: {str(e)}")
         flash(f'Error exporting logs: {str(e)}', 'error')
@@ -392,7 +401,7 @@ def clear_data():
     except Exception as e:
         logging.error(f"Error clearing data: {str(e)}")
         flash(f'Error clearing data: {str(e)}', 'error')
-    
+
     return redirect(url_for('index'))
 
 @app.route('/edit_template/<int:template_id>')
@@ -404,11 +413,11 @@ def edit_template(template_id):
         if t['id'] == template_id:
             template = t
             break
-    
+
     if not template:
         flash('Template not found', 'error')
         return redirect(url_for('index'))
-    
+
     return render_template('edit_template.html', template=template)
 
 @app.route('/save_template', methods=['POST'])
@@ -419,13 +428,13 @@ def save_template():
         name = request.form.get('name', '').strip()
         subject = request.form.get('subject', '').strip()
         content = request.form.get('content', '').strip()
-        
+
         if not all([name, subject, content]):
             flash('All fields are required', 'error')
             return redirect(url_for('edit_template', template_id=template_id))
-        
+
         templates = load_json_file('data/templates.json', [])
-        
+
         # Update template
         for i, template in enumerate(templates):
             if template['id'] == template_id:
@@ -436,14 +445,14 @@ def save_template():
                     'content': content
                 }
                 break
-        
+
         save_json_file('data/templates.json', templates)
         flash('Template updated successfully', 'success')
-        
+
     except Exception as e:
         logging.error(f"Error saving template: {str(e)}")
         flash(f'Error saving template: {str(e)}', 'error')
-    
+
     return redirect(url_for('index'))
 
 @app.route('/create_template', methods=['GET', 'POST'])
@@ -451,21 +460,21 @@ def create_template():
     """Create new template"""
     if request.method == 'GET':
         return render_template('create_template.html')
-    
+
     try:
         name = request.form.get('name', '').strip()
         subject = request.form.get('subject', '').strip()
         content = request.form.get('content', '').strip()
-        
+
         if not all([name, subject, content]):
             flash('All fields are required', 'error')
             return render_template('create_template.html')
-        
+
         templates = load_json_file('data/templates.json', [])
-        
+
         # Find next ID
         next_id = max([t['id'] for t in templates], default=0) + 1
-        
+
         # Create new template
         new_template = {
             'id': next_id,
@@ -473,13 +482,13 @@ def create_template():
             'subject': subject,
             'content': content
         }
-        
+
         templates.append(new_template)
         save_json_file('data/templates.json', templates)
-        
+
         flash('Template created successfully', 'success')
         return redirect(url_for('index'))
-        
+
     except Exception as e:
         logging.error(f"Error creating template: {str(e)}")
         flash(f'Error creating template: {str(e)}', 'error')
@@ -493,21 +502,21 @@ def send_test_email():
         subject = data.get('subject', 'Test Email from Maximally Dashboard')
         content = data.get('content', 'This is a test email from your Maximally outreach dashboard.')
         html_content = data.get('html_content', '')
-        
+
         # Send email via Resend
         params = {
             "from": "hello@maximally.in",
             "to": ["rishulchanana36@gmail.com"],
             "subject": subject,
         }
-        
+
         if html_content:
             params["html"] = html_content
         else:
             params["text"] = content
-            
+
         email = resend.Emails.send(params)
-        
+
         # Log the test email
         logs = load_json_file('data/logs.json', [])
         log_entry = {
@@ -522,12 +531,12 @@ def send_test_email():
         }
         logs.append(log_entry)
         save_json_file('data/logs.json', logs)
-        
+
         return jsonify({
             'message': 'Test email sent successfully to rishulchanana36@gmail.com',
             'email_id': email.get('id', '')
         })
-        
+
     except Exception as e:
         logging.error(f"Error sending test email: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -541,45 +550,50 @@ def send_custom_email():
         content = data.get('content', '').strip()
         html_content = data.get('html_content', '').strip()
         selected_schools = data.get('selected_schools', [])
-        
+
         if not subject or (not content and not html_content):
             return jsonify({'error': 'Subject and content are required'}), 400
-            
+
         if not selected_schools:
             return jsonify({'error': 'No schools selected'}), 400
-        
+
         schools = load_json_file('data/schools.json', [])
         logs = load_json_file('data/logs.json', [])
         results = []
-        
+
         for school_index in selected_schools:
             if school_index >= len(schools):
                 continue
-                
+
             school = schools[school_index]
-            
+
             # Replace placeholders in custom content
             email_subject = replace_placeholders(subject, school)
             email_content = replace_placeholders(content, school) if content else ''
             email_html = replace_placeholders(html_content, school) if html_content else ''
-            
+
             # Send email via Resend
             try:
+                settings = load_settings()
+                sender_email = settings.get('sender_email', 'hello@maximally.in')
+                sender_name = settings.get('sender_name', 'Maximally Team')
+                from_address = f"{sender_name} <{sender_email}>" if sender_name else sender_email
+
                 params = {
-                    "from": "hello@maximally.in",
+                    "from": from_address,
                     "to": [school['Email']],
                     "subject": email_subject,
                 }
-                
+
                 if email_html:
                     params["html"] = email_html
                     if email_content:
                         params["text"] = email_content
                 else:
                     params["text"] = email_content
-                
+
                 email = resend.Emails.send(params)
-                
+
                 log_entry = {
                     'school_name': school.get('School Name', ''),
                     'email': school['Email'],
@@ -590,9 +604,9 @@ def send_custom_email():
                     'email_id': email.get('id', ''),
                     'subject': email_subject
                 }
-                
+
                 results.append({'status': 'success', 'school': school['School Name']})
-                
+
             except Exception as email_error:
                 logging.error(f"Error sending custom email to {school['Email']}: {str(email_error)}")
                 log_entry = {
@@ -605,22 +619,114 @@ def send_custom_email():
                     'email_id': '',
                     'subject': email_subject
                 }
-                
+
                 results.append({'status': 'error', 'school': school['School Name'], 'error': str(email_error)})
-            
+
             logs.append(log_entry)
-        
+
         # Save updated logs
         save_json_file('data/logs.json', logs)
-        
+
         return jsonify({
             'message': f'Custom email sending completed',
             'results': results
         })
-        
+
     except Exception as e:
         logging.error(f"Error sending custom emails: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+    """Email settings page"""
+    if request.method == 'GET':
+        current_settings = load_settings()
+        return render_template('settings.html', settings=current_settings)
+
+    try:
+        sender_email = request.form.get('sender_email', '').strip()
+        sender_name = request.form.get('sender_name', '').strip()
+
+        if not sender_email:
+            flash('Sender email is required', 'error')
+            return redirect(url_for('settings'))
+
+        settings = {
+            'sender_email': sender_email,
+            'sender_name': sender_name
+        }
+
+        save_json_file('data/settings.json', settings)
+        flash('Settings updated successfully', 'success')
+
+    except Exception as e:
+        logging.error(f"Error saving settings: {str(e)}")
+        flash(f'Error saving settings: {str(e)}', 'error')
+
+    return redirect(url_for('settings'))
+
+@app.route('/individual_email', methods=['GET', 'POST'])
+def individual_email():
+    """Send individual email page"""
+    if request.method == 'GET':
+        return render_template('individual_email.html')
+
+    try:
+        to_email = request.form.get('to_email', '').strip()
+        to_name = request.form.get('to_name', '').strip()
+        subject = request.form.get('subject', '').strip()
+        content = request.form.get('content', '').strip()
+        html_content = request.form.get('html_content', '').strip()
+
+        if not all([to_email, subject]) or (not content and not html_content):
+            flash('To email, subject, and content are required', 'error')
+            return render_template('individual_email.html')
+
+        # Send email via Resend
+        settings = load_settings()
+        sender_email = settings.get('sender_email', 'hello@maximally.in')
+        sender_name = settings.get('sender_name', 'Maximally Team')
+        from_address = f"{sender_name} <{sender_email}>" if sender_name else sender_email
+
+        to_address = f"{to_name} <{to_email}>" if to_name else to_email
+
+        params = {
+            "from": from_address,
+            "to": [to_email],
+            "subject": subject,
+        }
+
+        if html_content:
+            params["html"] = html_content
+            if content:
+                params["text"] = content
+        else:
+            params["text"] = content
+
+        email = resend.Emails.send(params)
+
+        # Log the individual email
+        logs = load_json_file('data/logs.json', [])
+        log_entry = {
+            'school_name': to_name or 'Individual Email',
+            'email': to_email,
+            'template_used': 'Individual Email',
+            'template_id': 0,
+            'status': 'Sent',
+            'timestamp': datetime.now().isoformat(),
+            'email_id': email.get('id', ''),
+            'subject': subject
+        }
+        logs.append(log_entry)
+        save_json_file('data/logs.json', logs)
+
+        flash(f'Email sent successfully to {to_email}!', 'success')
+
+    except Exception as e:
+        logging.error(f"Error sending individual email: {str(e)}")
+        flash(f'Error sending email: {str(e)}', 'error')
+
+    return render_template('individual_email.html')
 
 # Initialize templates on startup
 initialize_templates()

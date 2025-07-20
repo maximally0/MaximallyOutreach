@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Individual Email - Maximally Outreach Dashboard</title>
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-envelope-heart"></i> Maximally Outreach Dashboard
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link active" href="/individual_email">
+                    <i class="bi bi-envelope-plus"></i> Send Individual Email
+                </a>
+                <a class="nav-link" href="/settings">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Individual Email Form -->
+        <div class="row">
+            <div class="col-md-10 mx-auto">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-envelope-plus"></i> Send Individual Email</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/individual_email" method="post" id="individualEmailForm">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="toEmail" class="form-label">To Email Address *</label>
+                                    <input type="email" class="form-control" id="toEmail" name="to_email" required
+                                           placeholder="recipient@example.com">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="toName" class="form-label">To Name (Optional)</label>
+                                    <input type="text" class="form-control" id="toName" name="to_name"
+                                           placeholder="Recipient Name">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="subject" class="form-label">Subject *</label>
+                                    <input type="text" class="form-control" id="subject" name="subject" required
+                                           placeholder="Enter email subject">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="content" class="form-label">Email Content (Plain Text) *</label>
+                                    <textarea class="form-control" id="content" name="content" rows="10" required
+                                              placeholder="Enter your email message here..."></textarea>
+                                    <div class="form-text">
+                                        This will be the plain text version of your email.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <label for="htmlContent" class="form-label">HTML Content (Optional)</label>
+                                    <textarea class="form-control" id="htmlContent" name="html_content" rows="8"
+                                              placeholder='<p>Enter HTML content here...</p>
+<p>You can include images: <img src="https://example.com/image.jpg" alt="Description"></p>
+<p><strong>Bold text</strong> and <em>italic text</em> supported.</p>'></textarea>
+                                    <div class="form-text">
+                                        Optional: Add HTML formatting for rich emails with images, links, and styling.
+                                        If provided, both plain text and HTML versions will be sent.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Note:</strong> This email will be sent from your configured sender address.
+                                        You can change the sender settings <a href="/settings" class="alert-link">here</a>.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-3 d-grid">
+                                    <a href="/" class="btn btn-secondary">
+                                        <i class="bi bi-arrow-left"></i> Back to Dashboard
+                                    </a>
+                                </div>
+                                <div class="col-md-3 d-grid">
+                                    <button type="button" class="btn btn-outline-info" onclick="previewIndividualEmail()">
+                                        <i class="bi bi-eye"></i> Preview Email
+                                    </button>
+                                </div>
+                                <div class="col-md-3 d-grid">
+                                    <button type="button" class="btn btn-outline-warning" onclick="sendTestFromForm()">
+                                        <i class="bi bi-envelope-check"></i> Send Test
+                                    </button>
+                                </div>
+                                <div class="col-md-3 d-grid">
+                                    <button type="submit" class="btn btn-success" id="sendIndividualButton">
+                                        <i class="bi bi-send"></i> Send Email
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Email Preview</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>To:</strong> <span id="previewTo"></span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Subject:</strong> <span id="previewSubject"></span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Content:</strong>
+                        <div class="border p-3 bg-body-secondary rounded">
+                            <pre id="previewContent" style="white-space: pre-wrap; font-family: inherit;"></pre>
+                        </div>
+                    </div>
+                    <div id="previewHtml" class="mb-3" style="display: none;">
+                        <strong>HTML Preview:</strong>
+                        <div class="border p-3 bg-body-secondary rounded" id="previewHtmlContent"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function previewIndividualEmail() {
+            const toEmail = document.getElementById('toEmail').value;
+            const toName = document.getElementById('toName').value;
+            const subject = document.getElementById('subject').value;
+            const content = document.getElementById('content').value;
+            const htmlContent = document.getElementById('htmlContent').value;
+            
+            if (!toEmail || !subject || !content) {
+                alert('Please fill in the required fields: To Email, Subject, and Content');
+                return;
+            }
+            
+            const toDisplay = toName ? `${toName} <${toEmail}>` : toEmail;
+            
+            document.getElementById('previewTo').textContent = toDisplay;
+            document.getElementById('previewSubject').textContent = subject;
+            document.getElementById('previewContent').textContent = content;
+            
+            const htmlPreview = document.getElementById('previewHtml');
+            if (htmlContent) {
+                document.getElementById('previewHtmlContent').innerHTML = htmlContent;
+                htmlPreview.style.display = 'block';
+            } else {
+                htmlPreview.style.display = 'none';
+            }
+            
+            const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+            modal.show();
+        }
+
+        async function sendTestFromForm() {
+            const subject = document.getElementById('subject').value || 'Test Email from Individual Email Form';
+            const content = document.getElementById('content').value || 'This is a test email from the individual email form.';
+            const htmlContent = document.getElementById('htmlContent').value;
+            
+            if (!confirm('Send test email to rishulchanana36@gmail.com?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/send_test_email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        subject: subject,
+                        content: content,
+                        html_content: htmlContent
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    alert('✅ Test email sent successfully to rishulchanana36@gmail.com!');
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error sending test email:', error);
+                alert('Error sending test email: ' + error.message);
+            }
+        }
+
+        // Form submission handling
+        document.getElementById('individualEmailForm').addEventListener('submit', function(e) {
+            const sendButton = document.getElementById('sendIndividualButton');
+            sendButton.disabled = true;
+            sendButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
+        });
+    </script>
+</body>
+</html>
