@@ -145,7 +145,7 @@ def upload_csv():
             flash('No file selected', 'error')
             return redirect(url_for('index'))
         
-        if not file.filename.lower().endswith('.csv'):
+        if not file.filename or not file.filename.lower().endswith('.csv'):
             flash('Please upload a CSV file', 'error')
             return redirect(url_for('index'))
         

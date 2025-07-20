@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is a Flask-based web application designed for educational outreach campaigns. The system allows users to upload school data, manage email templates, and send personalized outreach emails to educational institutions. It features template management, A/B testing capabilities, and email tracking functionality.
+This is a Flask-based web application designed for educational outreach campaigns. The system allows users to upload school data, manage email templates, and send personalized outreach emails to educational institutions. It features template management, A/B testing capabilities, and email tracking functionality. The application is fully operational with Resend API integration configured for sending emails from hello@maximally.in.
 
 ## User Preferences
 
@@ -74,7 +74,7 @@ Preferred communication style: Simple, everyday language.
 - **Bootstrap Icons**: Icon library for user interface elements
 
 ### Environment Variables
-- **RESEND_API_KEY**: Email service authentication
+- **RESEND_API_KEY**: Email service authentication (configured and active)
 - **SESSION_SECRET**: Flask session security key
 
 ## Deployment Strategy
