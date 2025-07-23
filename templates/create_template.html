@@ -128,19 +128,19 @@
                                     <div class="toolbar-section">
                                         <h6 class="mb-3"><i class="bi bi-tools"></i> Quick Tools</h6>
                                         <button type="button" class="btn btn-sm btn-outline-info toolbar-btn" 
-                                                onclick="insertText('content', '{{school_name}}')">
+                                                onclick="insertText('content-text', '{{school_name}}')">
                                             <i class="bi bi-building"></i> School Name
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-info toolbar-btn" 
-                                                onclick="insertText('content', '{{contact_person}}')">
+                                                onclick="insertText('content-text', '{{contact_person}}')">
                                             <i class="bi bi-person"></i> Contact Person
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-info toolbar-btn" 
-                                                onclick="insertText('content', '{{city}}')">
+                                                onclick="insertText('content-text', '{{city}}')">
                                             <i class="bi bi-geo-alt"></i> City
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-info toolbar-btn" 
-                                                onclick="insertText('content', '{{email}}')">
+                                                onclick="insertText('content-text', '{{email}}')">
                                             <i class="bi bi-envelope-at"></i> Email
                                         </button>
                                     </div>
@@ -148,7 +148,7 @@
                                     <label for="content" class="form-label fw-semibold">
                                         <i class="bi bi-file-text"></i> Email Content (Plain Text)
                                     </label>
-                                    <textarea class="form-control content-editor" id="content" name="content" 
+                                    <textarea class="form-control content-editor" id="content-text" name="content" 
                                               rows="15" oninput="updatePreview()" 
                                               placeholder="Dear {{contact_person}},
 
@@ -165,35 +165,35 @@ Maximally Team"></textarea>
                                     <div class="toolbar-section">
                                         <h6 class="mb-3"><i class="bi bi-palette"></i> HTML Tools</h6>
                                         <button type="button" class="btn btn-sm btn-outline-success toolbar-btn" 
-                                                onclick="insertHTML('content', '<p><strong>Bold text here</strong></p>')">
+                                                onclick="insertHTML('content-html', '<p><strong>Bold text here</strong></p>')">
                                             <i class="bi bi-type-bold"></i> Bold
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-success toolbar-btn" 
-                                                onclick="insertHTML('content', '<p><em>Italic text here</em></p>')">
+                                                onclick="insertHTML('content-html', '<p><em>Italic text here</em></p>')">
                                             <i class="bi bi-type-italic"></i> Italic
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-success toolbar-btn" 
-                                                onclick="insertHTML('content', '<a href=\'https://example.com\'>Link text</a>')">
+                                                onclick="insertHTML('content-html', '<a href=\'https://example.com\'>Link text</a>')">
                                             <i class="bi bi-link-45deg"></i> Link
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-success toolbar-btn" 
-                                                onclick="insertHTML('content', '<img src=\'https://example.com/image.jpg\' alt=\'Description\' style=\'max-width: 100%; height: auto;\'>')">
+                                                onclick="insertHTML('content-html', '<img src=\'https://example.com/image.jpg\' alt=\'Description\' style=\'max-width: 100%; height: auto;\'>')">
                                             <i class="bi bi-image"></i> Image
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-success toolbar-btn" 
-                                                onclick="insertHTML('content', '<ul><li>List item 1</li><li>List item 2</li></ul>')">
+                                                onclick="insertHTML('content-html', '<ul><li>List item 1</li><li>List item 2</li></ul>')">
                                             <i class="bi bi-list-ul"></i> List
                                         </button>
                                         <button type="button" class="btn btn-sm btn-outline-success toolbar-btn" 
-                                                onclick="insertHTML('content', '<br><hr><br>')">
+                                                onclick="insertHTML('content-html', '<br><hr><br>')">
                                             <i class="bi bi-dash-lg"></i> Divider
                                         </button>
                                     </div>
 
-                                    <label for="content" class="form-label fw-semibold">
+                                    <label for="content-html" class="form-label fw-semibold">
                                         <i class="bi bi-code-slash"></i> Email Content (HTML)
                                     </label>
-                                    <textarea class="form-control content-editor" id="content" name="content" 
+                                    <textarea class="form-control content-editor" id="content-html" name="content" 
                                               rows="15" oninput="updatePreview()" 
                                               placeholder="<h2>Hello {{contact_person}}!</h2>
 
@@ -294,7 +294,6 @@ The Maximally Team</p>
         // Update preview
         function updatePreview() {
             const subject = document.getElementById('subject').value || 'Partnership Opportunity with {{school_name}}';
-            const content = document.getElementById('content').value || 'Start typing to see your email preview...';
             
             // Update subject preview
             document.getElementById('preview-subject').innerHTML = replacePlaceholders(subject);
@@ -305,11 +304,13 @@ The Maximally Team</p>
             
             if (activeTab && activeTab.id === 'html-pane') {
                 // HTML preview
-                previewContent.innerHTML = replacePlaceholders(content);
+                const htmlContent = document.getElementById('content-html').value || '<h2>Hello {{contact_person}}!</h2>';
+                previewContent.innerHTML = replacePlaceholders(htmlContent);
             } else {
                 // Plain text preview
+                const textContent = document.getElementById('content-text').value || 'Start typing to see your email preview...';
                 previewContent.innerHTML = '<pre style="white-space: pre-wrap; font-family: inherit;">' + 
-                                         replacePlaceholders(content) + '</pre>';
+                                         replacePlaceholders(textContent) + '</pre>';
             }
         }
 
@@ -332,9 +333,38 @@ The Maximally Team</p>
             insertText(fieldId, html);
         }
 
+        // Handle form submission to use correct content
+        function handleFormSubmission() {
+            const activeTab = document.querySelector('.tab-pane.active');
+            const form = document.getElementById('templateForm');
+            
+            // Remove any existing hidden content field
+            const existingHidden = form.querySelector('input[name="content"]');
+            if (existingHidden) {
+                existingHidden.remove();
+            }
+            
+            // Create hidden input with the correct content
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'content';
+            
+            if (activeTab && activeTab.id === 'html-pane') {
+                hiddenInput.value = document.getElementById('content-html').value;
+            } else {
+                hiddenInput.value = document.getElementById('content-text').value;
+            }
+            
+            form.appendChild(hiddenInput);
+            return true;
+        }
+
         // Update preview on tab change
         document.addEventListener('DOMContentLoaded', function() {
             updatePreview();
+            
+            // Add form submission handler
+            document.getElementById('templateForm').addEventListener('submit', handleFormSubmission);
             
             // Update preview when switching tabs
             document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
