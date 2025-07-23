@@ -428,21 +428,28 @@ def save_template():
         name = request.form.get('name', '').strip()
         subject = request.form.get('subject', '').strip()
         content = request.form.get('content', '').strip()
+        content_text = request.form.get('content_text', '').strip()
+        content_html = request.form.get('content_html', '').strip()
 
-        if not all([name, subject, content]):
+        # Use the submitted content, or fall back to separate text/html fields
+        final_content = content if content else (content_text if content_text else content_html)
+
+        if not all([name, subject, final_content]):
             flash('All fields are required', 'error')
             return redirect(url_for('edit_template', template_id=template_id))
 
         templates = load_json_file('data/templates.json', [])
 
-        # Update template
+        # Update template with both text and HTML content
         for i, template in enumerate(templates):
             if template['id'] == template_id:
                 templates[i] = {
                     'id': template_id,
                     'name': name,
                     'subject': subject,
-                    'content': content
+                    'content': final_content,
+                    'content_text': content_text,
+                    'content_html': content_html
                 }
                 break
 
@@ -465,8 +472,13 @@ def create_template():
         name = request.form.get('name', '').strip()
         subject = request.form.get('subject', '').strip()
         content = request.form.get('content', '').strip()
+        content_text = request.form.get('content_text', '').strip()
+        content_html = request.form.get('content_html', '').strip()
 
-        if not all([name, subject, content]):
+        # Use the submitted content, or fall back to separate text/html fields
+        final_content = content if content else (content_text if content_text else content_html)
+
+        if not all([name, subject, final_content]):
             flash('All fields are required', 'error')
             return render_template('create_template.html')
 
@@ -475,12 +487,14 @@ def create_template():
         # Find next ID
         next_id = max([t['id'] for t in templates], default=0) + 1
 
-        # Create new template
+        # Create new template with both text and HTML content
         new_template = {
             'id': next_id,
             'name': name,
             'subject': subject,
-            'content': content
+            'content': final_content,
+            'content_text': content_text,
+            'content_html': content_html
         }
 
         templates.append(new_template)
@@ -539,6 +553,11 @@ def send_test_email():
                     custom_subject = template['subject']
                 if not custom_content and not html_content:
                     custom_content = template['content']
+                    # Also check for separate HTML content
+                    if template.get('content_html'):
+                        html_content = template['content_html']
+                    if template.get('content_text'):
+                        custom_content = template['content_text']
         
         # Use current form content (from the template editor or custom form)
         subject = custom_subject if custom_subject else 'Test Email from Maximally Dashboard'

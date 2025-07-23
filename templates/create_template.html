@@ -98,6 +98,8 @@
                     </div>
                     <div class="card-body">
                         <form method="post" id="templateForm">
+                            <input type="hidden" name="content_text" id="hidden_content_text" value="">
+                            <input type="hidden" name="content_html" id="hidden_content_html" value="">
                             <!-- Template Name -->
                             <div class="mb-4">
                                 <label for="name" class="form-label fw-semibold">
@@ -358,8 +360,14 @@ The Maximally Team</p>
 
         // Handle form submission to use correct content
         function handleFormSubmission() {
-            const activeTab = document.querySelector('.tab-pane.active');
             const form = document.getElementById('templateForm');
+            
+            // Update hidden fields with current content
+            const contentTextValue = document.getElementById('content-text').value;
+            const contentHtmlValue = document.getElementById('content-html').value;
+            
+            document.getElementById('hidden_content_text').value = contentTextValue;
+            document.getElementById('hidden_content_html').value = contentHtmlValue;
             
             // Remove any existing hidden content field
             const existingHidden = form.querySelector('input[name="content"]');
@@ -367,15 +375,16 @@ The Maximally Team</p>
                 existingHidden.remove();
             }
             
-            // Create hidden input with the correct content
+            // Create hidden input with the correct content based on active tab
+            const activeTab = document.querySelector('.tab-pane.active');
             const hiddenInput = document.createElement('input');
             hiddenInput.type = 'hidden';
             hiddenInput.name = 'content';
             
             if (activeTab && activeTab.id === 'html-pane') {
-                hiddenInput.value = document.getElementById('content-html').value;
+                hiddenInput.value = contentHtmlValue;
             } else {
-                hiddenInput.value = document.getElementById('content-text').value;
+                hiddenInput.value = contentTextValue;
             }
             
             form.appendChild(hiddenInput);
