@@ -1,62 +1,12 @@
 [
   {
-    "school_name": "Test Email",
+    "school_name": "SAINT KABIR PUBLIC SCHOOL",
     "email": "rishulchanana36@gmail.com",
-    "template_used": "Custom Test",
-    "template_id": 0,
+    "template_used": "AI Shipathon - School Invite (Intro)",
+    "template_id": 11,
     "status": "Sent",
-    "timestamp": "2025-07-23T03:05:07.933932",
-    "email_id": "a22b3327-02ae-4c2d-a0fe-d2a72c905978",
-    "subject": "Test Email from Maximally Dashboard"
-  },
-  {
-    "school_name": "Test Email",
-    "email": "rishulchanana36@gmail.com",
-    "template_used": "Custom Test",
-    "template_id": 0,
-    "status": "Sent (Test)",
-    "timestamp": "2025-07-23T03:11:42.885017",
-    "email_id": "847fcfb1-2ef2-43cf-b4ba-b885cb239e6d",
-    "subject": "[TEST] Test Email from Maximally Dashboard"
-  },
-  {
-    "school_name": "Test Email",
-    "email": "rishulchanana36@gmail.com",
-    "template_used": "AI Shipathon - School Invite (Intro)",
-    "template_id": 11,
-    "status": "Sent (Test)",
-    "timestamp": "2025-07-23T03:12:06.411751",
-    "email_id": "3ca93819-fbbb-4e3f-ab75-6dcdf8b10450",
-    "subject": "[TEST] Invite for Sample High School \u2013AI Competition (Aug 30\u2013Sept 1)"
-  },
-  {
-    "school_name": "Test Email",
-    "email": "rishulchanana36@gmail.com",
-    "template_used": "AI Shipathon - School Invite (Intro)",
-    "template_id": 11,
-    "status": "Sent (Test)",
-    "timestamp": "2025-07-23T03:14:22.364146",
-    "email_id": "f3f76cf0-8991-4786-a040-19d779d08dba",
-    "subject": "[TEST] Invite for Sample High School \u2013AI Competition (Aug 30\u2013Sept 1)"
-  },
-  {
-    "school_name": "Test Email",
-    "email": "rishulchanana36@gmail.com",
-    "template_used": "AI Shipathon - School Invite (Intro)",
-    "template_id": 11,
-    "status": "Sent (Test)",
-    "timestamp": "2025-07-23T03:21:00.987842",
-    "email_id": "2af6de15-586e-4ebd-b3cb-afa26070f821",
-    "subject": "[TEST] Invite for Sample High School \u2013AI Competition (Aug 30\u2013Sept 1)"
-  },
-  {
-    "school_name": "Test Email",
-    "email": "rishulchanana36@gmail.com",
-    "template_used": "AI Shipathon - School Invite (Intro)",
-    "template_id": 11,
-    "status": "Sent (Test)",
-    "timestamp": "2025-07-23T03:27:21.022638",
-    "email_id": "f15861f1-68ae-4744-ae09-6f6a065b9025",
-    "subject": "[TEST] Invite for Sample High School \u2013AI Competition (Aug 30\u2013Sept 1)"
+    "timestamp": "2025-07-23T03:34:21.673833",
+    "email_id": "78023a21-6825-45f0-8a7b-a89b11986971",
+    "subject": "Invite for SAINT KABIR PUBLIC SCHOOL \u2013AI Competition (Aug 30\u2013Sept 1)"
   }
 ]

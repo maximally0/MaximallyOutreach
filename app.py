@@ -338,9 +338,18 @@ def send_emails():
         # Save updated logs
         save_json_file('data/logs.json', logs)
 
+        # Remove successfully sent schools from the schools list
+        successful_emails = [result['school'] for result in results if result['status'] == 'success']
+        if successful_emails:
+            schools = load_json_file('data/schools.json')
+            # Keep only schools that were not successfully sent emails
+            remaining_schools = [school for school in schools if school.get('School Name', '') not in successful_emails]
+            save_json_file('data/schools.json', remaining_schools)
+
         return jsonify({
-            'message': f'Email sending completed',
-            'results': results
+            'message': f'Email sending completed. Removed {len(successful_emails)} schools from list.',
+            'results': results,
+            'removed_schools': len(successful_emails)
         })
 
     except Exception as e:
@@ -708,9 +717,18 @@ def send_custom_email():
         # Save updated logs
         save_json_file('data/logs.json', logs)
 
+        # Remove successfully sent schools from the schools list
+        successful_emails = [result['school'] for result in results if result['status'] == 'success']
+        if successful_emails:
+            schools = load_json_file('data/schools.json')
+            # Keep only schools that were not successfully sent emails
+            remaining_schools = [school for school in schools if school.get('School Name', '') not in successful_emails]
+            save_json_file('data/schools.json', remaining_schools)
+
         return jsonify({
-            'message': f'Custom email sending completed',
-            'results': results
+            'message': f'Custom email sending completed. Removed {len(successful_emails)} schools from list.',
+            'results': results,
+            'removed_schools': len(successful_emails)
         })
 
     except Exception as e:

@@ -248,7 +248,10 @@ async function sendCustomEmail() {
             let message = `Custom email sending completed!\n`;
             message += `✅ Successful: ${successCount}\n`;
             if (errorCount > 0) {
-                message += `❌ Errors: ${errorCount}`;
+                message += `❌ Errors: ${errorCount}\n`;
+            }
+            if (data.removed_schools > 0) {
+                message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
             }
             
             alert(message);
@@ -327,7 +330,10 @@ async function sendEmails() {
             let message = `Email sending completed!\n`;
             message += `✅ Successful: ${successCount}\n`;
             if (errorCount > 0) {
-                message += `❌ Errors: ${errorCount}`;
+                message += `❌ Errors: ${errorCount}\n`;
+            }
+            if (data.removed_schools > 0) {
+                message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
             }
             
             alert(message);

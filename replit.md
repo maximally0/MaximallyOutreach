@@ -47,6 +47,7 @@ Preferred communication style: Simple, everyday language.
 - **Provider**: Resend API integration for email delivery from hello@maximally.in
 - **Features**: Template-based personalized emails with variable substitution
 - **Custom Emails**: Send emails without templates using custom subject and content
+- **Auto-Remove Feature**: Automatically removes schools from the list after successfully sending emails to prevent duplicate outreach
 - **HTML Support**: Rich email formatting with image support via HTML content
 - **A/B Testing**: Support for testing multiple templates simultaneously
 - **Test Email**: Send current form content to rishulchanana36@gmail.com with sample school data for validation
@@ -111,11 +112,12 @@ The application is designed as a simple, self-contained system suitable for smal
 
 ## Recent Changes
 
-### July 23, 2025 - Complete HTML Template System Implementation
+### July 23, 2025 - Complete HTML Template System Implementation + Auto-Remove Feature
 - **Fixed HTML Template Editor**: Resolved ID conflicts between plain text and HTML content areas with separate storage fields
 - **Updated Test Email System**: Test emails now use actual template content with proper HTML/text format detection
-- **Enhanced Preview System**: Added proper CSS styling for HTML content including visible links, formatting, and working preview modal
+- **Enhanced Preview System**: Added professional email-like styling with clean white background and blue links for previews
 - **Improved Template Management**: Separate storage for content_text and content_html with proper form submission handling
 - **Email Delivery Enhancement**: Updated email sending to properly handle HTML content for both test emails and school outreach
 - **Template Syntax Fix**: Resolved Jinja2 template conflicts with JavaScript template literals
-- **Preview Modal Integration**: Added complete email preview modal with HTML rendering and proper dark theme styling
+- **Preview Modal Integration**: Added complete email preview modal with HTML rendering and proper typography
+- **Auto-Remove Schools Feature**: Implemented automatic removal of schools from list after successfully sending emails to prevent duplicate outreach
