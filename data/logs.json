@@ -48,5 +48,15 @@
     "timestamp": "2025-07-23T03:21:00.987842",
     "email_id": "2af6de15-586e-4ebd-b3cb-afa26070f821",
     "subject": "[TEST] Invite for Sample High School \u2013AI Competition (Aug 30\u2013Sept 1)"
+  },
+  {
+    "school_name": "Test Email",
+    "email": "rishulchanana36@gmail.com",
+    "template_used": "AI Shipathon - School Invite (Intro)",
+    "template_id": 11,
+    "status": "Sent (Test)",
+    "timestamp": "2025-07-23T03:27:21.022638",
+    "email_id": "f15861f1-68ae-4744-ae09-6f6a065b9025",
+    "subject": "[TEST] Invite for Sample High School \u2013AI Competition (Aug 30\u2013Sept 1)"
   }
 ]
