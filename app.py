@@ -5,6 +5,7 @@ import io
 import logging
 import random
 import re
+import time
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
 import pandas as pd
@@ -252,7 +253,7 @@ def send_emails():
 
         results = []
 
-        for school_index in selected_schools:
+        for i, school_index in enumerate(selected_schools):
             if school_index >= len(schools):
                 continue
 
@@ -282,6 +283,10 @@ def send_emails():
             email_subject = replace_placeholders(subject, school)
             email_content = replace_placeholders(content, school)
             email_html = replace_placeholders(html_content, school) if html_content else ''
+
+            # Rate limiting: wait 0.6 seconds between emails (less than 2 per second)
+            if i > 0:
+                time.sleep(0.6)
 
             # Send email via Resend
             try:
@@ -319,19 +324,50 @@ def send_emails():
                 results.append({'status': 'success', 'school': school['School Name']})
 
             except Exception as email_error:
-                logging.error(f"Error sending email to {school['Email']}: {str(email_error)}")
-                log_entry = {
-                    'school_name': school.get('School Name', ''),
-                    'email': school['Email'],
-                    'template_used': current_template['name'],
-                    'template_id': current_template['id'],
-                    'status': f'Error: {str(email_error)}',
-                    'timestamp': datetime.now().isoformat(),
-                    'email_id': '',
-                    'subject': email_subject
-                }
-
-                results.append({'status': 'error', 'school': school['School Name'], 'error': str(email_error)})
+                error_message = str(email_error)
+                logging.error(f"Error sending email to {school['Email']}: {error_message}")
+                
+                # If it's a rate limit error, wait longer and retry once
+                if "Too many requests" in error_message or "rate limit" in error_message.lower():
+                    logging.info(f"Rate limit hit, waiting 2 seconds and retrying for {school['Email']}")
+                    time.sleep(2)
+                    try:
+                        email = resend.Emails.send(params)
+                        log_entry = {
+                            'school_name': school.get('School Name', ''),
+                            'email': school['Email'],
+                            'template_used': current_template['name'],
+                            'template_id': current_template['id'],
+                            'status': 'Sent (Retry)',
+                            'timestamp': datetime.now().isoformat(),
+                            'email_id': email.get('id', ''),
+                            'subject': email_subject
+                        }
+                        results.append({'status': 'success', 'school': school['School Name']})
+                    except Exception as retry_error:
+                        log_entry = {
+                            'school_name': school.get('School Name', ''),
+                            'email': school['Email'],
+                            'template_used': current_template['name'],
+                            'template_id': current_template['id'],
+                            'status': f'Error: {str(retry_error)}',
+                            'timestamp': datetime.now().isoformat(),
+                            'email_id': '',
+                            'subject': email_subject
+                        }
+                        results.append({'status': 'error', 'school': school['School Name'], 'error': str(retry_error)})
+                else:
+                    log_entry = {
+                        'school_name': school.get('School Name', ''),
+                        'email': school['Email'],
+                        'template_used': current_template['name'],
+                        'template_id': current_template['id'],
+                        'status': f'Error: {error_message}',
+                        'timestamp': datetime.now().isoformat(),
+                        'email_id': '',
+                        'subject': email_subject
+                    }
+                    results.append({'status': 'error', 'school': school['School Name'], 'error': error_message})
 
             logs.append(log_entry)
 
@@ -651,7 +687,7 @@ def send_custom_email():
         logs = load_json_file('data/logs.json', [])
         results = []
 
-        for school_index in selected_schools:
+        for i, school_index in enumerate(selected_schools):
             if school_index >= len(schools):
                 continue
 
@@ -661,6 +697,10 @@ def send_custom_email():
             email_subject = replace_placeholders(subject, school)
             email_content = replace_placeholders(content, school) if content else ''
             email_html = replace_placeholders(html_content, school) if html_content else ''
+
+            # Rate limiting: wait 0.6 seconds between emails
+            if i > 0:
+                time.sleep(0.6)
 
             # Send email via Resend
             try:
@@ -698,19 +738,50 @@ def send_custom_email():
                 results.append({'status': 'success', 'school': school['School Name']})
 
             except Exception as email_error:
-                logging.error(f"Error sending custom email to {school['Email']}: {str(email_error)}")
-                log_entry = {
-                    'school_name': school.get('School Name', ''),
-                    'email': school['Email'],
-                    'template_used': 'Custom Email',
-                    'template_id': 0,
-                    'status': f'Error: {str(email_error)}',
-                    'timestamp': datetime.now().isoformat(),
-                    'email_id': '',
-                    'subject': email_subject
-                }
-
-                results.append({'status': 'error', 'school': school['School Name'], 'error': str(email_error)})
+                error_message = str(email_error)
+                logging.error(f"Error sending custom email to {school['Email']}: {error_message}")
+                
+                # If it's a rate limit error, wait and retry once
+                if "Too many requests" in error_message or "rate limit" in error_message.lower():
+                    logging.info(f"Rate limit hit, waiting 2 seconds and retrying for {school['Email']}")
+                    time.sleep(2)
+                    try:
+                        email = resend.Emails.send(params)
+                        log_entry = {
+                            'school_name': school.get('School Name', ''),
+                            'email': school['Email'],
+                            'template_used': 'Custom Email',
+                            'template_id': 0,
+                            'status': 'Sent (Retry)',
+                            'timestamp': datetime.now().isoformat(),
+                            'email_id': email.get('id', ''),
+                            'subject': email_subject
+                        }
+                        results.append({'status': 'success', 'school': school['School Name']})
+                    except Exception as retry_error:
+                        log_entry = {
+                            'school_name': school.get('School Name', ''),
+                            'email': school['Email'],
+                            'template_used': 'Custom Email', 
+                            'template_id': 0,
+                            'status': f'Error: {str(retry_error)}',
+                            'timestamp': datetime.now().isoformat(),
+                            'email_id': '',
+                            'subject': email_subject
+                        }
+                        results.append({'status': 'error', 'school': school['School Name'], 'error': str(retry_error)})
+                else:
+                    log_entry = {
+                        'school_name': school.get('School Name', ''),
+                        'email': school['Email'],
+                        'template_used': 'Custom Email',
+                        'template_id': 0,
+                        'status': f'Error: {error_message}',
+                        'timestamp': datetime.now().isoformat(),
+                        'email_id': '',
+                        'subject': email_subject
+                    }
+                    results.append({'status': 'error', 'school': school['School Name'], 'error': error_message})
 
             logs.append(log_entry)
 
