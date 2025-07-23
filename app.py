@@ -213,7 +213,7 @@ def preview_email():
         # Use custom content if provided, otherwise use template
         subject = custom_subject if custom_subject else template['subject']
         content = custom_content if custom_content else template['content']
-        html_content = custom_html_content if custom_html_content else ''
+        html_content = custom_html_content if custom_html_content else template.get('content_html', '')
 
         # Replace placeholders
         preview_subject = replace_placeholders(subject, school)
@@ -275,8 +275,8 @@ def send_emails():
 
             # Use custom content if provided
             subject = custom_subject if custom_subject else current_template['subject']
-            content = custom_content if custom_content else current_template['content']
-            html_content = custom_html_content if custom_html_content else ''
+            content = custom_content if custom_content else current_template.get('content_text', current_template['content'])
+            html_content = custom_html_content if custom_html_content else current_template.get('content_html', '')
 
             # Replace placeholders
             email_subject = replace_placeholders(subject, school)

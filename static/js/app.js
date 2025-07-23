@@ -121,7 +121,14 @@ async function previewEmail() {
             // Show preview in modal
             document.getElementById('previewTo').textContent = data.school.Email;
             document.getElementById('previewSubject').textContent = data.subject;
-            document.getElementById('previewContent').textContent = data.content;
+            
+            // Use HTML content if available, otherwise plain text
+            const contentElement = document.getElementById('previewContent');
+            if (data.html_content && data.html_content.trim()) {
+                contentElement.innerHTML = data.html_content;
+            } else {
+                contentElement.innerHTML = '<pre style="white-space: pre-wrap; font-family: inherit;">' + data.content + '</pre>';
+            }
             
             const modal = new bootstrap.Modal(document.getElementById('previewModal'));
             modal.show();
@@ -297,7 +304,8 @@ async function sendEmails() {
                 selected_schools: selectedSchools,
                 ab_testing: abTesting,
                 custom_content: customContent || null,
-                custom_subject: customSubject || null
+                custom_subject: customSubject || null,
+                custom_html_content: document.getElementById('customHtmlContent').value || null
             })
         });
         
