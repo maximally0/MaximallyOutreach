@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "school_name": "Test Email",
+    "email": "rishulchanana36@gmail.com",
+    "template_used": "Custom Test",
+    "template_id": 0,
+    "status": "Sent",
+    "timestamp": "2025-07-23T03:05:07.933932",
+    "email_id": "a22b3327-02ae-4c2d-a0fe-d2a72c905978",
+    "subject": "Test Email from Maximally Dashboard"
+  }
+]

@@ -108,3 +108,12 @@ Preferred communication style: Simple, everyday language.
 - **API Configuration**: Resend API key must be configured for email functionality
 
 The application is designed as a simple, self-contained system suitable for small to medium-scale educational outreach campaigns, with room for future enhancements like user authentication, database integration, and advanced analytics.
+
+## Recent Changes
+
+### July 23, 2025 - HTML Template Functionality Fix
+- **Fixed HTML Template Editor**: Resolved ID conflicts between plain text and HTML content areas
+- **Updated Test Email System**: Test emails now use actual template content instead of generic content
+- **Enhanced Preview System**: Added proper CSS styling for HTML content including visible links and proper formatting
+- **Improved Template Management**: Separate content areas for plain text and HTML with proper form submission handling
+- **Template Syntax Fix**: Resolved Jinja2 template conflicts with JavaScript template literals
