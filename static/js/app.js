@@ -296,6 +296,10 @@ async function sendEmails() {
     sendButton.disabled = true;
     sendButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
     
+    // Create an AbortController for request timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 minute timeout
+    
     try {
         const response = await fetch('/send', {
             method: 'POST',
@@ -309,16 +313,23 @@ async function sendEmails() {
                 custom_content: customContent || null,
                 custom_subject: customSubject || null,
                 custom_html_content: document.getElementById('customHtmlContent').value || null
-            })
+            }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         
-        if (response.ok) {
-            // Show results
-            let successCount = 0;
-            let errorCount = 0;
-            
+        // Show results
+        let successCount = 0;
+        let errorCount = 0;
+        
+        if (data.results && Array.isArray(data.results)) {
             data.results.forEach(result => {
                 if (result.status === 'success') {
                     successCount++;
@@ -326,26 +337,36 @@ async function sendEmails() {
                     errorCount++;
                 }
             });
-            
-            let message = `Email sending completed!\n`;
-            message += `✅ Successful: ${successCount}\n`;
-            if (errorCount > 0) {
-                message += `❌ Errors: ${errorCount}\n`;
-            }
-            if (data.removed_schools > 0) {
-                message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
-            }
-            
-            alert(message);
-            
-            // Reload page to show updated logs
-            window.location.reload();
-        } else {
-            alert('Error: ' + data.error);
         }
+        
+        let message = `Email sending completed!\n`;
+        message += `✅ Successful: ${successCount}\n`;
+        if (errorCount > 0) {
+            message += `❌ Errors: ${errorCount}\n`;
+        }
+        if (data.removed_schools > 0) {
+            message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
+        }
+        
+        alert(message);
+        
+        // Reload page to show updated logs
+        window.location.reload();
+        
     } catch (error) {
+        clearTimeout(timeoutId);
         console.error('Error sending emails:', error);
-        alert('Error sending emails: ' + error.message);
+        
+        let errorMessage = 'Error sending emails: ';
+        if (error.name === 'AbortError') {
+            errorMessage += 'Request timed out. The operation may still be running in the background.';
+        } else if (error.message) {
+            errorMessage += error.message;
+        } else {
+            errorMessage += 'Unknown error occurred';
+        }
+        
+        alert(errorMessage);
     } finally {
         // Re-enable send button
         sendButton.disabled = false;

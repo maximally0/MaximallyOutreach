@@ -251,6 +251,10 @@ def send_emails():
         if not selected_schools:
             return jsonify({'error': 'No schools selected'}), 400
 
+        # Limit batch size to prevent timeouts
+        if len(selected_schools) > 50:
+            return jsonify({'error': 'Please select 50 or fewer schools at a time to prevent timeouts'}), 400
+
         results = []
 
         for i, school_index in enumerate(selected_schools):
@@ -284,11 +288,11 @@ def send_emails():
             email_content = replace_placeholders(content, school)
             email_html = replace_placeholders(html_content, school) if html_content else ''
 
-            # Rate limiting: wait 0.6 seconds between emails (less than 2 per second)
+            # Rate limiting: wait 1 second between emails to avoid timeouts
             if i > 0:
-                time.sleep(0.6)
+                time.sleep(1.0)
 
-            # Send email via Resend
+            # Send email via Resend with timeout handling
             try:
                 settings = load_settings()
                 sender_email = settings.get('sender_email', 'hello@maximally.in')
@@ -308,7 +312,21 @@ def send_emails():
                 else:
                     params["text"] = email_content
 
-                email = resend.Emails.send(params)
+                # Add timeout and retry logic
+                max_retries = 2
+                retry_delay = 2
+                
+                for attempt in range(max_retries):
+                    try:
+                        email = resend.Emails.send(params)
+                        break  # Success, exit retry loop
+                    except Exception as retry_error:
+                        if attempt < max_retries - 1:  # Not the last attempt
+                            logging.warning(f"Attempt {attempt + 1} failed for {school['Email']}: {str(retry_error)}")
+                            time.sleep(retry_delay)
+                            continue
+                        else:
+                            raise retry_error  # Re-raise on final attempt
 
                 log_entry = {
                     'school_name': school.get('School Name', ''),
