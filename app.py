@@ -275,9 +275,9 @@ def send_emails():
         if not selected_schools:
             return jsonify({'error': 'No schools selected'}), 400
 
-        # For large-scale sending, allow bigger batches but with better rate limiting
-        if len(selected_schools) > 500:
-            return jsonify({'error': 'Please select 500 or fewer schools at a time to prevent system overload'}), 400
+        # For large-scale sending, use smaller batches to prevent timeouts
+        if len(selected_schools) > 50:
+            return jsonify({'error': 'Please select 50 or fewer schools at a time to prevent rate limits and timeouts'}), 400
 
         results = []
 
@@ -355,10 +355,10 @@ def send_emails():
             email_content = replace_placeholders(content, school)
             email_html = replace_placeholders(html_content, school) if html_content else ''
 
-            # Improved rate limiting for large volumes
-            # Resend allows 10 emails/second for most plans, so we use 0.2s delay
+            # Conservative rate limiting to avoid hitting limits
+            # Resend allows 2 requests/second, so we use 0.6s delay to be safe
             if i > 0:
-                time.sleep(0.2)  # 5 emails per second, well within limits
+                time.sleep(0.6)  # Less than 2 emails per second, within limits
                 
             # Progress logging for large batches
             if i > 0 and i % 100 == 0:
@@ -401,17 +401,17 @@ def send_emails():
                         
                         # Handle specific error types
                         if "rate limit" in retry_error_str.lower() or "too many requests" in retry_error_str:
-                            # Exponential backoff for rate limits
-                            wait_time = base_retry_delay * (2 ** attempt) + random.uniform(0, 1)
-                            logging.warning(f"Rate limit hit on attempt {attempt + 1} for {school['Email']}, waiting {wait_time:.1f}s")
+                            # Short delay for rate limits to avoid worker timeout
+                            wait_time = 2 + (attempt * 1)  # 2s, 3s, 4s delays
+                            logging.warning(f"Rate limit hit on attempt {attempt + 1} for {school['Email']}, waiting {wait_time}s")
                             time.sleep(wait_time)
                         elif "invalid" in retry_error_str.lower() and "email" in retry_error_str.lower():
                             # Don't retry invalid emails
                             logging.error(f"Invalid email address {school['Email']}: {retry_error_str}")
                             raise retry_error
                         else:
-                            # Standard retry delay for other errors
-                            wait_time = base_retry_delay * (attempt + 1)
+                            # Short retry delay for other errors to avoid worker timeout
+                            wait_time = 1 + attempt  # 1s, 2s, 3s delays
                             logging.warning(f"Attempt {attempt + 1} failed for {school['Email']}: {retry_error_str}")
                             if attempt < max_retries - 1:
                                 time.sleep(wait_time)
