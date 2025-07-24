@@ -10,6 +10,7 @@ from datetime import datetime
 from flask import Flask, render_template, request, jsonify, send_file, flash, redirect, url_for
 import pandas as pd
 import resend
+from email_validator import validate_email, EmailNotValidError
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -106,6 +107,15 @@ def initialize_templates():
         save_json_file(templates_file, default_templates)
     return load_json_file(templates_file, default_templates)
 
+def validate_email_address(email):
+    """Validate email address format"""
+    try:
+        # Validate and get info about the email
+        validated_email = validate_email(email)
+        return True, validated_email.email
+    except EmailNotValidError:
+        return False, email
+
 def replace_placeholders(text, school_data):
     """Replace placeholders in email content with school data"""
     placeholders = {
@@ -159,11 +169,19 @@ def upload_csv():
         csv_input = csv.DictReader(stream)
 
         schools = []
+        invalid_emails = []
         for row in csv_input:
             # Clean and validate row data
             school = {key.strip(): value.strip() for key, value in row.items() if value.strip()}
             if school.get('School Name') and school.get('Email'):
-                schools.append(school)
+                # Validate email format
+                is_valid, clean_email = validate_email_address(school['Email'])
+                if is_valid:
+                    school['Email'] = clean_email  # Use cleaned email
+                    schools.append(school)
+                else:
+                    invalid_emails.append({'school': school.get('School Name', 'Unknown'), 'email': school.get('Email', '')})
+                    logging.warning(f"Invalid email for {school.get('School Name', 'Unknown')}: {school.get('Email', '')}")
 
         if not schools:
             flash('No valid school records found in CSV. Make sure you have School Name and Email columns.', 'error')
@@ -171,7 +189,13 @@ def upload_csv():
 
         # Save schools data
         save_json_file('data/schools.json', schools)
-        flash(f'Successfully uploaded {len(schools)} schools', 'success')
+        
+        # Report results with validation info
+        success_msg = f'Successfully uploaded {len(schools)} schools'
+        if invalid_emails:
+            success_msg += f' ({len(invalid_emails)} schools skipped due to invalid emails)'
+            logging.info(f"Skipped schools with invalid emails: {invalid_emails}")
+        flash(success_msg, 'success')
 
     except Exception as e:
         logging.error(f"Error uploading CSV: {str(e)}")
@@ -251,9 +275,9 @@ def send_emails():
         if not selected_schools:
             return jsonify({'error': 'No schools selected'}), 400
 
-        # Limit batch size to prevent timeouts
-        if len(selected_schools) > 50:
-            return jsonify({'error': 'Please select 50 or fewer schools at a time to prevent timeouts'}), 400
+        # For large-scale sending, allow bigger batches but with better rate limiting
+        if len(selected_schools) > 500:
+            return jsonify({'error': 'Please select 500 or fewer schools at a time to prevent system overload'}), 400
 
         results = []
 
@@ -262,6 +286,27 @@ def send_emails():
                 continue
 
             school = schools[school_index]
+            
+            # Pre-validate email before attempting to send
+            is_valid, clean_email = validate_email_address(school['Email'])
+            if not is_valid:
+                log_entry = {
+                    'school_name': school.get('School Name', ''),
+                    'email': school['Email'],
+                    'template_used': '',
+                    'template_id': 0,
+                    'status': 'Error (Invalid Email): Email format is invalid',
+                    'timestamp': datetime.now().isoformat(),
+                    'email_id': '',
+                    'subject': '',
+                    'error_category': 'Invalid Email'
+                }
+                logs.append(log_entry)
+                results.append({'status': 'error', 'school': school['School Name'], 'error': 'Invalid email format', 'category': 'Invalid Email'})
+                continue
+            
+            # Use cleaned email
+            school['Email'] = clean_email
 
             # Determine which template to use
             if ab_testing:
@@ -288,9 +333,14 @@ def send_emails():
             email_content = replace_placeholders(content, school)
             email_html = replace_placeholders(html_content, school) if html_content else ''
 
-            # Rate limiting: wait 1 second between emails to avoid timeouts
+            # Improved rate limiting for large volumes
+            # Resend allows 10 emails/second for most plans, so we use 0.2s delay
             if i > 0:
-                time.sleep(1.0)
+                time.sleep(0.2)  # 5 emails per second, well within limits
+                
+            # Progress logging for large batches
+            if i > 0 and i % 100 == 0:
+                logging.info(f"Progress: {i}/{len(selected_schools)} emails processed")
 
             # Send email via Resend with timeout handling
             try:
@@ -312,20 +362,35 @@ def send_emails():
                 else:
                     params["text"] = email_content
 
-                # Add timeout and retry logic
-                max_retries = 2
-                retry_delay = 2
+                # Enhanced retry logic for production use
+                max_retries = 3
+                base_retry_delay = 1
                 
                 for attempt in range(max_retries):
                     try:
                         email = resend.Emails.send(params)
                         break  # Success, exit retry loop
                     except Exception as retry_error:
-                        if attempt < max_retries - 1:  # Not the last attempt
-                            logging.warning(f"Attempt {attempt + 1} failed for {school['Email']}: {str(retry_error)}")
-                            time.sleep(retry_delay)
-                            continue
+                        retry_error_str = str(retry_error)
+                        
+                        # Handle specific error types
+                        if "rate limit" in retry_error_str.lower() or "too many requests" in retry_error_str:
+                            # Exponential backoff for rate limits
+                            wait_time = base_retry_delay * (2 ** attempt) + random.uniform(0, 1)
+                            logging.warning(f"Rate limit hit on attempt {attempt + 1} for {school['Email']}, waiting {wait_time:.1f}s")
+                            time.sleep(wait_time)
+                        elif "invalid" in retry_error_str.lower() and "email" in retry_error_str.lower():
+                            # Don't retry invalid emails
+                            logging.error(f"Invalid email address {school['Email']}: {retry_error_str}")
+                            raise retry_error
                         else:
+                            # Standard retry delay for other errors
+                            wait_time = base_retry_delay * (attempt + 1)
+                            logging.warning(f"Attempt {attempt + 1} failed for {school['Email']}: {retry_error_str}")
+                            if attempt < max_retries - 1:
+                                time.sleep(wait_time)
+                        
+                        if attempt == max_retries - 1:
                             raise retry_error  # Re-raise on final attempt
 
                 log_entry = {
@@ -345,47 +410,30 @@ def send_emails():
                 error_message = str(email_error)
                 logging.error(f"Error sending email to {school['Email']}: {error_message}")
                 
-                # If it's a rate limit error, wait longer and retry once
-                if "Too many requests" in error_message or "rate limit" in error_message.lower():
-                    logging.info(f"Rate limit hit, waiting 2 seconds and retrying for {school['Email']}")
-                    time.sleep(2)
-                    try:
-                        email = resend.Emails.send(params)
-                        log_entry = {
-                            'school_name': school.get('School Name', ''),
-                            'email': school['Email'],
-                            'template_used': current_template['name'],
-                            'template_id': current_template['id'],
-                            'status': 'Sent (Retry)',
-                            'timestamp': datetime.now().isoformat(),
-                            'email_id': email.get('id', ''),
-                            'subject': email_subject
-                        }
-                        results.append({'status': 'success', 'school': school['School Name']})
-                    except Exception as retry_error:
-                        log_entry = {
-                            'school_name': school.get('School Name', ''),
-                            'email': school['Email'],
-                            'template_used': current_template['name'],
-                            'template_id': current_template['id'],
-                            'status': f'Error: {str(retry_error)}',
-                            'timestamp': datetime.now().isoformat(),
-                            'email_id': '',
-                            'subject': email_subject
-                        }
-                        results.append({'status': 'error', 'school': school['School Name'], 'error': str(retry_error)})
-                else:
-                    log_entry = {
-                        'school_name': school.get('School Name', ''),
-                        'email': school['Email'],
-                        'template_used': current_template['name'],
-                        'template_id': current_template['id'],
-                        'status': f'Error: {error_message}',
-                        'timestamp': datetime.now().isoformat(),
-                        'email_id': '',
-                        'subject': email_subject
-                    }
-                    results.append({'status': 'error', 'school': school['School Name'], 'error': error_message})
+                # Enhanced error categorization and logging
+                error_category = "Unknown Error"
+                
+                if "rate limit" in error_message.lower() or "too many requests" in error_message:
+                    error_category = "Rate Limit"
+                elif "invalid" in error_message.lower() and "email" in error_message.lower():
+                    error_category = "Invalid Email"
+                elif "authentication" in error_message.lower() or "unauthorized" in error_message.lower():
+                    error_category = "Authentication Error"
+                elif "network" in error_message.lower() or "connection" in error_message.lower():
+                    error_category = "Network Error"
+                
+                log_entry = {
+                    'school_name': school.get('School Name', ''),
+                    'email': school['Email'],
+                    'template_used': current_template['name'],
+                    'template_id': current_template['id'],
+                    'status': f'Error ({error_category}): {error_message}',
+                    'timestamp': datetime.now().isoformat(),
+                    'email_id': '',
+                    'subject': email_subject,
+                    'error_category': error_category
+                }
+                results.append({'status': 'error', 'school': school['School Name'], 'error': error_message, 'category': error_category})
 
             logs.append(log_entry)
 
@@ -400,10 +448,35 @@ def send_emails():
             remaining_schools = [school for school in schools if school.get('School Name', '') not in successful_emails]
             save_json_file('data/schools.json', remaining_schools)
 
+        # Calculate summary statistics
+        total_processed = len(results)
+        successful_count = len([r for r in results if r['status'] == 'success'])
+        error_count = len([r for r in results if r['status'] == 'error'])
+        
+        # Group errors by category for better reporting
+        error_categories = {}
+        for result in results:
+            if result['status'] == 'error':
+                category = result.get('category', 'Unknown')
+                error_categories[category] = error_categories.get(category, 0) + 1
+        
+        summary_message = f'Batch completed: {successful_count} sent, {error_count} failed out of {total_processed} schools'
+        if error_categories:
+            error_details = ', '.join([f"{count} {category}" for category, count in error_categories.items()])
+            summary_message += f'. Errors: {error_details}'
+        
+        logging.info(f"Batch summary: {summary_message}")
+        
         return jsonify({
-            'message': f'Email sending completed. Removed {len(successful_emails)} schools from list.',
+            'message': summary_message,
             'results': results,
-            'removed_schools': len(successful_emails)
+            'summary': {
+                'total_processed': total_processed,
+                'successful': successful_count,
+                'failed': error_count,
+                'removed_schools': len(successful_emails),
+                'error_categories': error_categories
+            }
         })
 
     except Exception as e:
