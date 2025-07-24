@@ -216,6 +216,9 @@ async function sendCustomEmail() {
         return;
     }
     
+    // Show loading modal
+    showLoadingModal('Preparing custom email...', selectedSchools.length);
+    
     try {
         const response = await fetch('/send_custom_email', {
             method: 'POST',
@@ -231,9 +234,10 @@ async function sendCustomEmail() {
         });
         
         const data = await response.json();
+        updateLoadingProgress('Custom emails sent successfully!', 100);
         
         if (response.ok) {
-            // Show results
+            // Show results with animated success
             let successCount = 0;
             let errorCount = 0;
             
@@ -245,25 +249,24 @@ async function sendCustomEmail() {
                 }
             });
             
-            let message = `Custom email sending completed!\n`;
-            message += `✅ Successful: ${successCount}\n`;
-            if (errorCount > 0) {
-                message += `❌ Errors: ${errorCount}\n`;
-            }
-            if (data.removed_schools > 0) {
-                message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
-            }
-            
-            alert(message);
-            
-            // Reload page to show updated logs
-            window.location.reload();
+            // Hide loading modal and show results
+            setTimeout(() => {
+                hideLoadingModal();
+                showResultsModal('Custom email sending completed!', successCount, errorCount);
+                
+                // Reload page after showing results
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            }, 1000);
         } else {
-            alert('Error: ' + data.error);
+            hideLoadingModal();
+            showErrorModal('Error: ' + data.error);
         }
     } catch (error) {
+        hideLoadingModal();
         console.error('Error sending custom emails:', error);
-        alert('Error sending custom emails: ' + error.message);
+        showErrorModal('Error sending custom emails: ' + error.message);
     }
 }
 
@@ -292,6 +295,9 @@ async function sendEmails() {
         return;
     }
     
+    // Show loading modal
+    showLoadingModal('Preparing to send emails...', selectedSchools.length);
+    
     // Disable send button and show loading
     sendButton.disabled = true;
     sendButton.innerHTML = '<i class="bi bi-hourglass-split"></i> Sending...';
@@ -318,14 +324,17 @@ async function sendEmails() {
         });
         
         clearTimeout(timeoutId);
+        updateLoadingProgress('Processing response...', 90);
         
         if (!response.ok) {
+            hideLoadingModal();
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         
         const data = await response.json();
+        updateLoadingProgress('Emails sent successfully!', 100);
         
-        // Show results
+        // Show results with animated success
         let successCount = 0;
         let errorCount = 0;
         
@@ -339,22 +348,30 @@ async function sendEmails() {
             });
         }
         
-        let message = `Email sending completed!\n`;
-        message += `✅ Successful: ${successCount}\n`;
-        if (errorCount > 0) {
-            message += `❌ Errors: ${errorCount}\n`;
-        }
-        if (data.removed_schools > 0) {
-            message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
-        }
-        
-        alert(message);
-        
-        // Reload page to show updated logs
-        window.location.reload();
+        // Hide loading modal and show results
+        setTimeout(() => {
+            hideLoadingModal();
+            
+            let message = `Email sending completed!\n`;
+            message += `✅ Successful: ${successCount}\n`;
+            if (errorCount > 0) {
+                message += `❌ Errors: ${errorCount}\n`;
+            }
+            if (data.removed_schools > 0) {
+                message += `🗑️ Removed ${data.removed_schools} school(s) from list`;
+            }
+            
+            showResultsModal(message, successCount, errorCount);
+            
+            // Reload page after showing results
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        }, 1000);
         
     } catch (error) {
         clearTimeout(timeoutId);
+        hideLoadingModal();
         console.error('Error sending emails:', error);
         
         let errorMessage = 'Error sending emails: ';
@@ -366,7 +383,7 @@ async function sendEmails() {
             errorMessage += 'Unknown error occurred';
         }
         
-        alert(errorMessage);
+        showErrorModal(errorMessage);
     } finally {
         // Re-enable send button
         sendButton.disabled = false;
@@ -398,4 +415,154 @@ function updateSelectAllCheckbox() {
             selectAllCheckbox.indeterminate = true;
         }
     }
+}
+
+// Loading Modal Functions
+function showLoadingModal(message, totalEmails) {
+    const modalHtml = `
+        <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body text-center py-4">
+                        <div class="mb-3">
+                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </div>
+                        <h5 id="loadingMessage">${message}</h5>
+                        <p class="text-muted mb-3">Sending to ${totalEmails} school(s)</p>
+                        <div class="progress mb-2" style="height: 8px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 id="loadingProgress" role="progressbar" style="width: 10%"></div>
+                        </div>
+                        <small class="text-muted" id="progressText">Starting...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('loadingModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    modal.show();
+    
+    // Start progress animation
+    animateProgress();
+}
+
+function updateLoadingProgress(message, percentage) {
+    const loadingMessage = document.getElementById('loadingMessage');
+    const progressBar = document.getElementById('loadingProgress');
+    const progressText = document.getElementById('progressText');
+    
+    if (loadingMessage) loadingMessage.textContent = message;
+    if (progressBar) progressBar.style.width = percentage + '%';
+    if (progressText) progressText.textContent = `${percentage}% complete`;
+}
+
+function animateProgress() {
+    let progress = 10;
+    const interval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 85) {
+            clearInterval(interval);
+            return;
+        }
+        
+        const progressBar = document.getElementById('loadingProgress');
+        const progressText = document.getElementById('progressText');
+        if (progressBar) progressBar.style.width = progress + '%';
+        if (progressText) progressText.textContent = `${Math.round(progress)}% complete`;
+    }, 1000);
+}
+
+function hideLoadingModal() {
+    const modal = bootstrap.Modal.getInstance(document.getElementById('loadingModal'));
+    if (modal) {
+        modal.hide();
+        setTimeout(() => {
+            const modalElement = document.getElementById('loadingModal');
+            if (modalElement) modalElement.remove();
+        }, 300);
+    }
+}
+
+function showResultsModal(message, successCount, errorCount) {
+    const iconClass = errorCount > 0 ? 'bi-exclamation-triangle text-warning' : 'bi-check-circle text-success';
+    const title = errorCount > 0 ? 'Partially Complete' : 'Success!';
+    
+    const modalHtml = `
+        <div class="modal fade" id="resultsModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 text-center">
+                        <div class="w-100">
+                            <i class="bi ${iconClass}" style="font-size: 3rem;"></i>
+                            <h4 class="modal-title mt-2">${title}</h4>
+                        </div>
+                    </div>
+                    <div class="modal-body text-center">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="p-3 bg-success bg-opacity-10 rounded">
+                                    <h3 class="text-success mb-0">${successCount}</h3>
+                                    <small class="text-muted">Sent Successfully</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 ${errorCount > 0 ? 'bg-warning bg-opacity-10' : 'bg-light'} rounded">
+                                    <h3 class="${errorCount > 0 ? 'text-warning' : 'text-muted'} mb-0">${errorCount}</h3>
+                                    <small class="text-muted">Errors</small>
+                                </div>
+                            </div>
+                        </div>
+                        ${errorCount > 0 ? '<p class="mt-3 text-muted">Check the Error Dashboard for details</p>' : ''}
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <small class="text-muted">Page will refresh automatically...</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('resultsModal'));
+    modal.show();
+}
+
+function showErrorModal(errorMessage) {
+    const modalHtml = `
+        <div class="modal fade" id="errorModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 text-center">
+                        <div class="w-100">
+                            <i class="bi bi-x-circle text-danger" style="font-size: 3rem;"></i>
+                            <h4 class="modal-title mt-2">Error Occurred</h4>
+                        </div>
+                    </div>
+                    <div class="modal-body text-center">
+                        <p class="text-muted">${errorMessage}</p>
+                    </div>
+                    <div class="modal-footer border-0 justify-content-center">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('errorModal'));
+    modal.show();
 }
