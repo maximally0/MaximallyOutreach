@@ -310,7 +310,7 @@ def send_emails():
                     'subject': '',
                     'error_category': 'Missing Data'
                 }
-                results.append({'status': 'error', 'school': school.get('School Name', 'Unknown'), 'error': f'Missing required fields: {", ".join(missing_fields)}', 'category': 'Missing Data'})
+                results.append({'status': 'error', 'school': school.get('School Name', 'Unknown'), 'email': school.get('Email', 'Unknown'), 'error': f'Missing required fields: {", ".join(missing_fields)}', 'category': 'Missing Data'})
                 logging.warning(f"Skipping school due to missing data: {school.get('School Name', 'Unknown')} - Missing: {missing_fields}")
                 logs.append(log_entry)
                 continue
@@ -329,7 +329,7 @@ def send_emails():
                     'subject': '',
                     'error_category': 'Invalid Email'
                 }
-                results.append({'status': 'error', 'school': school['School Name'], 'error': 'Invalid email format', 'category': 'Invalid Email'})
+                results.append({'status': 'error', 'school': school['School Name'], 'email': school['Email'], 'error': 'Invalid email format', 'category': 'Invalid Email'})
                 logging.warning(f"Skipping school due to invalid email: {school.get('School Name', '')} - {school['Email']}")
                 logs.append(log_entry)
                 continue
@@ -437,7 +437,7 @@ def send_emails():
                     'subject': email_subject
                 }
 
-                results.append({'status': 'success', 'school': school['School Name']})
+                results.append({'status': 'success', 'school': school['School Name'], 'email': school['Email']})
 
             except Exception as email_error:
                 error_message = str(email_error)
@@ -471,7 +471,7 @@ def send_emails():
                     'subject': email_subject,
                     'error_category': error_category
                 }
-                results.append({'status': 'error', 'school': school['School Name'], 'error': error_message, 'category': error_category})
+                results.append({'status': 'error', 'school': school['School Name'], 'email': school['Email'], 'error': error_message, 'category': error_category})
                 
                 # For critical system errors, log additional context
                 if error_category in ["System Error", "Network Error"]:
@@ -1038,7 +1038,7 @@ def send_custom_email():
                     'subject': email_subject
                 }
 
-                results.append({'status': 'success', 'school': school['School Name']})
+                results.append({'status': 'success', 'school': school['School Name'], 'email': school['Email']})
 
             except Exception as email_error:
                 error_message = str(email_error)
@@ -1060,7 +1060,7 @@ def send_custom_email():
                             'email_id': email.get('id', ''),
                             'subject': email_subject
                         }
-                        results.append({'status': 'success', 'school': school['School Name']})
+                        results.append({'status': 'success', 'school': school['School Name'], 'email': school['Email']})
                     except Exception as retry_error:
                         log_entry = {
                             'school_name': school.get('School Name', ''),
@@ -1072,7 +1072,7 @@ def send_custom_email():
                             'email_id': '',
                             'subject': email_subject
                         }
-                        results.append({'status': 'error', 'school': school['School Name'], 'error': str(retry_error)})
+                        results.append({'status': 'error', 'school': school['School Name'], 'email': school['Email'], 'error': str(retry_error)})
                 else:
                     log_entry = {
                         'school_name': school.get('School Name', ''),
@@ -1084,7 +1084,7 @@ def send_custom_email():
                         'email_id': '',
                         'subject': email_subject
                     }
-                    results.append({'status': 'error', 'school': school['School Name'], 'error': error_message})
+                    results.append({'status': 'error', 'school': school['School Name'], 'email': school['Email'], 'error': error_message})
 
             logs.append(log_entry)
 

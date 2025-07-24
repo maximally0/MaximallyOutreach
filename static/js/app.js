@@ -234,20 +234,29 @@ async function sendCustomEmail() {
         });
         
         const data = await response.json();
-        updateLoadingProgress('Custom emails sent successfully!', 100);
         
         if (response.ok) {
             // Show results with animated success
             let successCount = 0;
             let errorCount = 0;
             
-            data.results.forEach(result => {
+            // Simulate real-time progress for custom emails too
+            for (let i = 0; i < data.results.length; i++) {
+                const result = data.results[i];
+                
+                // Add small delay to show each email being processed
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
                 if (result.status === 'success') {
                     successCount++;
+                    addEmailToProgress(result.school, 'Custom email sent successfully', 'Sent', false);
                 } else {
                     errorCount++;
+                    addEmailToProgress(result.school, result.error || 'Unknown error', 'Failed', true);
                 }
-            });
+            }
+            
+            updateLoadingProgress('Custom emails sent successfully!', 100);
             
             // Hide loading modal and show results
             setTimeout(() => {
@@ -332,21 +341,30 @@ async function sendEmails() {
         }
         
         const data = await response.json();
-        updateLoadingProgress('Emails sent successfully!', 100);
         
         // Show results with animated success
         let successCount = 0;
         let errorCount = 0;
         
+        // Simulate real-time progress by adding each result to the progress display
         if (data.results && Array.isArray(data.results)) {
-            data.results.forEach(result => {
+            for (let i = 0; i < data.results.length; i++) {
+                const result = data.results[i];
+                
+                // Add small delay to show each email being processed
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
                 if (result.status === 'success') {
                     successCount++;
+                    addEmailToProgress(result.school, 'Email sent successfully', 'Sent', false);
                 } else {
                     errorCount++;
+                    addEmailToProgress(result.school, result.error || 'Unknown error', 'Failed', true);
                 }
-            });
+            }
         }
+        
+        updateLoadingProgress('Emails sent successfully!', 100);
         
         // Hide loading modal and show results
         setTimeout(() => {
@@ -421,21 +439,45 @@ function updateSelectAllCheckbox() {
 function showLoadingModal(message, totalEmails) {
     const modalHtml = `
         <div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-body text-center py-4">
-                        <div class="mb-3">
-                            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                                <span class="visually-hidden">Loading...</span>
+                    <div class="modal-header border-0">
+                        <h5 class="modal-title">
+                            <i class="bi bi-envelope-paper text-primary"></i> Sending Emails
+                        </h5>
+                    </div>
+                    <div class="modal-body py-4">
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                            <div class="col-md-8">
+                                <h6 id="loadingMessage">${message}</h6>
+                                <p class="text-muted mb-3">Processing ${totalEmails} school(s)</p>
+                                <div class="progress mb-2" style="height: 12px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                         id="loadingProgress" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <small class="text-muted" id="progressText">Starting...</small>
+                                    <small class="text-muted" id="progressCount">0 / ${totalEmails}</small>
+                                </div>
                             </div>
                         </div>
-                        <h5 id="loadingMessage">${message}</h5>
-                        <p class="text-muted mb-3">Sending to ${totalEmails} school(s)</p>
-                        <div class="progress mb-2" style="height: 8px;">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                                 id="loadingProgress" role="progressbar" style="width: 10%"></div>
+                        
+                        <!-- Real-time email status -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Email Progress</h6>
+                            </div>
+                            <div class="card-body" style="max-height: 300px; overflow-y: auto;">
+                                <div id="emailProgressList">
+                                    <p class="text-muted text-center">Waiting to start...</p>
+                                </div>
+                            </div>
                         </div>
-                        <small class="text-muted" id="progressText">Starting...</small>
                     </div>
                 </div>
             </div>
@@ -455,18 +497,71 @@ function showLoadingModal(message, totalEmails) {
     const modal = new bootstrap.Modal(document.getElementById('loadingModal'));
     modal.show();
     
-    // Start progress animation
-    animateProgress();
+    // Initialize progress tracking
+    window.emailProgress = {
+        total: totalEmails,
+        completed: 0,
+        schools: []
+    };
 }
 
 function updateLoadingProgress(message, percentage) {
     const loadingMessage = document.getElementById('loadingMessage');
     const progressBar = document.getElementById('loadingProgress');
     const progressText = document.getElementById('progressText');
+    const progressCount = document.getElementById('progressCount');
     
     if (loadingMessage) loadingMessage.textContent = message;
     if (progressBar) progressBar.style.width = percentage + '%';
-    if (progressText) progressText.textContent = `${percentage}% complete`;
+    if (progressText) progressText.textContent = `${Math.round(percentage)}% complete`;
+    
+    if (window.emailProgress && progressCount) {
+        progressCount.textContent = `${window.emailProgress.completed} / ${window.emailProgress.total}`;
+    }
+}
+
+function addEmailToProgress(schoolName, email, status, isError = false) {
+    const progressList = document.getElementById('emailProgressList');
+    if (!progressList) return;
+    
+    // Clear initial message
+    if (progressList.innerHTML.includes('Waiting to start...')) {
+        progressList.innerHTML = '';
+    }
+    
+    const iconClass = isError ? 'bi-x-circle text-danger' : 'bi-check-circle text-success';
+    const statusClass = isError ? 'text-danger' : 'text-success';
+    const statusText = isError ? 'Failed' : 'Sent';
+    
+    const emailItem = document.createElement('div');
+    emailItem.className = 'border-bottom pb-2 mb-2 email-progress-item';
+    emailItem.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>${schoolName}</strong>
+                <br>
+                <small class="text-muted">${email}</small>
+            </div>
+            <div class="text-end">
+                <i class="bi ${iconClass}"></i>
+                <span class="${statusClass}">${statusText}</span>
+                ${isError ? `<br><small class="text-muted">${status}</small>` : ''}
+            </div>
+        </div>
+    `;
+    
+    // Add to top of list for most recent first
+    progressList.insertBefore(emailItem, progressList.firstChild);
+    
+    // Update global progress
+    if (window.emailProgress) {
+        window.emailProgress.completed++;
+        const percentage = (window.emailProgress.completed / window.emailProgress.total) * 100;
+        updateLoadingProgress('Sending emails...', percentage);
+        
+        // Scroll to top to show latest email
+        progressList.scrollTop = 0;
+    }
 }
 
 function animateProgress() {
