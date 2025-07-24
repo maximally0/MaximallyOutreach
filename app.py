@@ -261,6 +261,11 @@ def send_emails():
     """Send emails to selected schools"""
     try:
         data = request.get_json()
+        logging.info(f"Received data: {data}")
+        
+        if not data:
+            return jsonify({'error': 'No data received'}), 400
+            
         template_id = data.get('template_id')
         selected_schools = data.get('selected_schools', [])
         ab_testing = data.get('ab_testing', False)
@@ -278,6 +283,8 @@ def send_emails():
         # For large-scale sending, use smaller batches to prevent timeouts
         if len(selected_schools) > 50:
             return jsonify({'error': 'Please select 50 or fewer schools at a time to prevent rate limits and timeouts'}), 400
+            
+        logging.info(f"Template ID: {template_id}, AB Testing: {ab_testing}, Selected schools: {len(selected_schools)}")
 
         results = []
 
