@@ -390,8 +390,12 @@ def send_emails():
                 
                 for attempt in range(max_retries):
                     try:
+                        # Robust error handling for all types of failures
                         email = resend.Emails.send(params)
                         break  # Success, exit retry loop
+                    except (SystemExit, KeyboardInterrupt) as system_error:
+                        # Handle system-level interruptions
+                        raise Exception(f"Email sending was interrupted by system: {str(system_error)}")
                     except Exception as retry_error:
                         retry_error_str = str(retry_error)
                         
@@ -514,8 +518,38 @@ def send_emails():
         })
 
     except Exception as e:
-        logging.error(f"Error sending emails: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+        # Log the critical error to both logs and file
+        error_message = str(e)
+        logging.error(f"Critical error in send_emails: {error_message}")
+        
+        # Create error log entry for critical failures
+        logs = load_json_file('data/logs.json', [])
+        log_entry = {
+            'school_name': 'System Error',
+            'email': 'N/A',
+            'template_used': 'N/A',
+            'template_id': 0,
+            'status': f'Error (System Error): Critical failure - {error_message[:200]}',
+            'timestamp': datetime.now().isoformat(),
+            'email_id': '',
+            'subject': 'N/A',
+            'error_category': 'System Error'
+        }
+        logs.append(log_entry)
+        save_json_file('data/logs.json', logs)
+        
+        return jsonify({
+            'error': f'System error occurred: {error_message}',
+            'message': 'Error logged to dashboard for analysis',
+            'results': [],
+            'summary': {
+                'total_processed': 0,
+                'successful': 0,
+                'failed': 1,
+                'removed_schools': 0,
+                'error_categories': {'System Error': 1}
+            }
+        }), 500
 
 @app.route('/error_dashboard')
 def error_dashboard():
