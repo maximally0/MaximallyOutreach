@@ -483,6 +483,143 @@ def send_emails():
         logging.error(f"Error sending emails: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/error_dashboard')
+def error_dashboard():
+    """Error Logging Dashboard for Email Campaigns"""
+    try:
+        logs = load_json_file('data/logs.json', [])
+        
+        # Filter and analyze error logs
+        error_logs = [log for log in logs if 'Error' in log.get('status', '')]
+        success_logs = [log for log in logs if log.get('status') == 'Sent' or 'Sent (Retry)' in log.get('status', '')]
+        
+        # Calculate error statistics
+        total_emails = len(logs)
+        total_errors = len(error_logs)
+        total_success = len(success_logs)
+        error_rate = (total_errors / total_emails * 100) if total_emails > 0 else 0
+        
+        # Group errors by category
+        error_categories = {}
+        for log in error_logs:
+            category = log.get('error_category', 'Unknown')
+            if category not in error_categories:
+                error_categories[category] = {
+                    'count': 0,
+                    'examples': []
+                }
+            error_categories[category]['count'] += 1
+            if len(error_categories[category]['examples']) < 5:  # Keep up to 5 examples
+                error_categories[category]['examples'].append(log)
+        
+        # Group errors by template
+        template_errors = {}
+        for log in error_logs:
+            template_name = log.get('template_used', 'Unknown Template')
+            template_errors[template_name] = template_errors.get(template_name, 0) + 1
+        
+        # Recent errors (last 24 hours)
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        recent_cutoff = now - timedelta(hours=24)
+        
+        recent_errors = []
+        for log in error_logs:
+            try:
+                log_time = datetime.fromisoformat(log.get('timestamp', ''))
+                if log_time >= recent_cutoff:
+                    recent_errors.append(log)
+            except:
+                continue
+        
+        # Timeline data for charts (group by hour for last 24 hours)
+        timeline_data = {}
+        for i in range(24):
+            hour_start = now - timedelta(hours=i+1)
+            hour_end = now - timedelta(hours=i)
+            hour_key = hour_start.strftime('%H:00')
+            
+            hour_errors = 0
+            hour_success = 0
+            
+            for log in logs:
+                try:
+                    log_time = datetime.fromisoformat(log.get('timestamp', ''))
+                    if hour_start <= log_time < hour_end:
+                        if 'Error' in log.get('status', ''):
+                            hour_errors += 1
+                        elif log.get('status') == 'Sent' or 'Sent (Retry)' in log.get('status', ''):
+                            hour_success += 1
+                except:
+                    continue
+            
+            timeline_data[hour_key] = {
+                'errors': hour_errors,
+                'success': hour_success
+            }
+        
+        return render_template('error_dashboard.html',
+                             error_logs=error_logs,
+                             success_logs=success_logs,
+                             total_emails=total_emails,
+                             total_errors=total_errors,
+                             total_success=total_success,
+                             error_rate=error_rate,
+                             error_categories=error_categories,
+                             template_errors=template_errors,
+                             recent_errors=recent_errors,
+                             timeline_data=timeline_data)
+    
+    except Exception as e:
+        logging.error(f"Error loading error dashboard: {str(e)}")
+        flash(f'Error loading dashboard: {str(e)}', 'error')
+        return redirect(url_for('index'))
+
+@app.route('/api/error_stats')
+def get_error_stats():
+    """API endpoint for error statistics"""
+    try:
+        logs = load_json_file('data/logs.json', [])
+        
+        # Calculate basic stats
+        total_emails = len(logs)
+        error_logs = [log for log in logs if 'Error' in log.get('status', '')]
+        success_logs = [log for log in logs if log.get('status') == 'Sent' or 'Sent (Retry)' in log.get('status', '')]
+        
+        # Group errors by category
+        error_categories = {}
+        for log in error_logs:
+            category = log.get('error_category', 'Unknown')
+            error_categories[category] = error_categories.get(category, 0) + 1
+        
+        return jsonify({
+            'total_emails': total_emails,
+            'total_errors': len(error_logs),
+            'total_success': len(success_logs),
+            'error_rate': (len(error_logs) / total_emails * 100) if total_emails > 0 else 0,
+            'error_categories': error_categories
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/clear_errors', methods=['POST'])
+def clear_errors():
+    """Clear all error logs"""
+    try:
+        logs = load_json_file('data/logs.json', [])
+        # Keep only successful sends
+        success_logs = [log for log in logs if log.get('status') == 'Sent' or 'Sent (Retry)' in log.get('status', '')]
+        save_json_file('data/logs.json', success_logs)
+        
+        flash(f'Cleared {len(logs) - len(success_logs)} error logs', 'success')
+        return redirect(url_for('error_dashboard'))
+    
+    except Exception as e:
+        logging.error(f"Error clearing error logs: {str(e)}")
+        flash(f'Error clearing logs: {str(e)}', 'error')
+        return redirect(url_for('error_dashboard'))
+
 @app.route('/export')
 def export_logs():
     """Export email logs as CSV"""
