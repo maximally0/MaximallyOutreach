@@ -114,7 +114,7 @@ The application is designed as a simple, self-contained system suitable for smal
 
 ## Recent Changes
 
-### July 24, 2025 - Migration to Standard Replit Environment + Production-Ready Enhancements
+### July 24, 2025 - Migration to Standard Replit Environment + Production-Ready Enhancements + Error Dashboard
 - **Project Migration**: Successfully migrated from Replit Agent to standard Replit environment
 - **Package Dependencies**: Verified all required packages (Flask, Pandas, Resend, Gunicorn, email-validator) are properly installed
 - **Workflow Configuration**: Configured Gunicorn server to run on port 5000 with proper host binding (0.0.0.0)
@@ -126,10 +126,23 @@ The application is designed as a simple, self-contained system suitable for smal
   - Enhanced retry logic with 3 attempts and intelligent error categorization
   - Batch processing support up to 500 schools per batch
   - Progress logging every 100 emails for large batches
-  - Comprehensive error reporting with categories (Rate Limit, Invalid Email, Authentication, Network)
+  - Comprehensive error reporting with categories (Rate Limit, Invalid Email, Authentication, Network, Missing Data, System Error, Timeout)
   - Pre-send email validation to prevent invalid emails from being processed
   - Detailed batch summary statistics with error breakdown
-- **Error Handling**: Robust error categorization and logging for production use
+  - Smart school skipping: automatically skips schools with missing required data instead of failing entire batch
+- **Error Logging Dashboard**: Comprehensive error monitoring and analysis system with:
+  - Visual charts showing error categories and 24-hour timeline trends
+  - Real-time error statistics with success/failure rates
+  - Error categorization by type (Network, Rate Limit, Invalid Email, Missing Data, etc.)
+  - Template-based error analysis to identify problematic templates
+  - Recent error logs with detailed failure information
+  - Error clearing functionality and export capabilities
+  - Integration with main dashboard showing error counts and quick access
+- **Enhanced Error Handling**: 
+  - All errors are now properly logged regardless of error type (SSL, network, system errors)
+  - Schools with missing or invalid data are skipped gracefully with detailed logging
+  - Critical system errors don't stop the entire batch processing
+  - Truncated error messages prevent log bloat while preserving essential information
 - **Environment Setup**: Confirmed all JSON data files and directory structure are properly maintained
 
 ### July 23, 2025 - Complete HTML Template System Implementation + Auto-Remove Feature

@@ -287,6 +287,27 @@ def send_emails():
 
             school = schools[school_index]
             
+            # Validate school data completeness
+            required_fields = ['School Name', 'Email']
+            missing_fields = [field for field in required_fields if not school.get(field, '').strip()]
+            
+            if missing_fields:
+                log_entry = {
+                    'school_name': school.get('School Name', 'Unknown'),
+                    'email': school.get('Email', 'Unknown'),
+                    'template_used': '',
+                    'template_id': 0,
+                    'status': f'Error (Missing Data): Missing required fields: {", ".join(missing_fields)}',
+                    'timestamp': datetime.now().isoformat(),
+                    'email_id': '',
+                    'subject': '',
+                    'error_category': 'Missing Data'
+                }
+                results.append({'status': 'error', 'school': school.get('School Name', 'Unknown'), 'error': f'Missing required fields: {", ".join(missing_fields)}', 'category': 'Missing Data'})
+                logging.warning(f"Skipping school due to missing data: {school.get('School Name', 'Unknown')} - Missing: {missing_fields}")
+                logs.append(log_entry)
+                continue
+            
             # Pre-validate email before attempting to send
             is_valid, clean_email = validate_email_address(school['Email'])
             if not is_valid:
@@ -301,8 +322,9 @@ def send_emails():
                     'subject': '',
                     'error_category': 'Invalid Email'
                 }
-                logs.append(log_entry)
                 results.append({'status': 'error', 'school': school['School Name'], 'error': 'Invalid email format', 'category': 'Invalid Email'})
+                logging.warning(f"Skipping school due to invalid email: {school.get('School Name', '')} - {school['Email']}")
+                logs.append(log_entry)
                 continue
             
             # Use cleaned email
@@ -419,23 +441,35 @@ def send_emails():
                     error_category = "Invalid Email"
                 elif "authentication" in error_message.lower() or "unauthorized" in error_message.lower():
                     error_category = "Authentication Error"
-                elif "network" in error_message.lower() or "connection" in error_message.lower():
+                elif "network" in error_message.lower() or "connection" in error_message.lower() or "ssl" in error_message.lower():
                     error_category = "Network Error"
+                elif "timeout" in error_message.lower():
+                    error_category = "Timeout Error"
+                elif "systemexit" in error_message.lower():
+                    error_category = "System Error"
                 
+                # Always create log entry for any error
                 log_entry = {
                     'school_name': school.get('School Name', ''),
                     'email': school['Email'],
-                    'template_used': current_template['name'],
-                    'template_id': current_template['id'],
-                    'status': f'Error ({error_category}): {error_message}',
+                    'template_used': current_template.get('name', 'Unknown') if current_template else 'Unknown',
+                    'template_id': current_template.get('id', 0) if current_template else 0,
+                    'status': f'Error ({error_category}): {error_message[:200]}',  # Truncate very long errors
                     'timestamp': datetime.now().isoformat(),
                     'email_id': '',
                     'subject': email_subject,
                     'error_category': error_category
                 }
                 results.append({'status': 'error', 'school': school['School Name'], 'error': error_message, 'category': error_category})
+                
+                # For critical system errors, log additional context
+                if error_category in ["System Error", "Network Error"]:
+                    logging.error(f"Critical error for {school.get('School Name', '')}: {error_message}")
+                    # Continue processing other schools instead of stopping
 
-            logs.append(log_entry)
+            # Ensure log_entry is always added (defined in both success and error cases)
+            if 'log_entry' in locals():
+                logs.append(log_entry)
 
         # Save updated logs
         save_json_file('data/logs.json', logs)
